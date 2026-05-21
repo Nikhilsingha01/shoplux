@@ -85,9 +85,7 @@ function StatusStepper({ status }: { status: string }) {
   );
 }
 
-declare global {
-  interface Window { Razorpay: any; }
-}
+
 
 export default function OrderDetail() {
   const { id } = useParams<{ id: string }>();
@@ -148,7 +146,7 @@ export default function OrderDetail() {
     setIsPayingOnline(true);
     try {
       // Load Razorpay script
-      if (!window.Razorpay) {
+      if (!(window as any).Razorpay) {
         await new Promise<void>((resolve, reject) => {
           const s = document.createElement("script");
           s.src = "https://checkout.razorpay.com/v1/checkout.js";
@@ -161,7 +159,7 @@ export default function OrderDetail() {
         method: "POST",
       });
 
-      const rzp = new window.Razorpay({
+      const rzp = new (window as any).Razorpay({
         key: rzpOrder.key,
         amount: rzpOrder.amount,
         currency: rzpOrder.currency ?? "INR",

@@ -4,6 +4,7 @@ import {
   useUpdateCategory,
   useDeleteCategory,
   type CategoryInput,
+  customFetch,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -98,22 +99,14 @@ function CategoryForm({
                 const file = e.target.files[0];
                 const formData = new FormData();
                 formData.append("image", file);
-                try {
-                  const res = await fetch("/api/admin/upload", {
+                 try {
+                  const data = await customFetch<{ url: string }>("/api/admin/upload", {
                     method: "POST",
-                    headers: {
-                      "x-admin-token": localStorage.getItem("adminToken") || "",
-                    },
                     body: formData,
                   });
-                  if (res.ok) {
-                    const data = await res.json();
-                    setForm((f) => ({ ...f, image: data.url }));
-                  } else {
-                    toast.error("Failed to upload image");
-                  }
-                } catch (err) {
-                  toast.error("Error uploading image");
+                  setForm((f) => ({ ...f, image: data.url }));
+                } catch (err: any) {
+                  toast.error(err?.message || "Error uploading image");
                 }
               }
             }}
@@ -158,7 +151,7 @@ export default function AdminCategories() {
         { id: editing.id, data },
         {
           onSuccess: () => { toast.success("Category updated"); setDialog(null); refetch(); },
-          onError: () => toast.error("Failed to update"),
+          onError: (err: any) => toast.error(err?.data?.error || err?.message || "Failed to update category"),
         },
       );
     } else {
@@ -166,7 +159,7 @@ export default function AdminCategories() {
         { data: { ...data, slug: data.slug || data.name.toLowerCase().replace(/\s+/g, "-") } },
         {
           onSuccess: () => { toast.success("Category created"); setDialog(null); refetch(); },
-          onError: () => toast.error("Failed to create"),
+          onError: (err: any) => toast.error(err?.data?.error || err?.message || "Failed to create category"),
         },
       );
     }

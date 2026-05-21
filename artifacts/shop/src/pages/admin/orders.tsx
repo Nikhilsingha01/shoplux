@@ -213,7 +213,7 @@ export default function AdminOrders() {
                               </div>
                               
                               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {order.items?.map((item) => (
+                                {order.items?.map((item: any) => (
                                   <div key={item.id} className="flex gap-4 p-3.5 bg-background border border-border rounded-xl shadow-sm hover:shadow-md transition-shadow">
                                     <div className="w-16 h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0 border border-border">
                                       {item.productImage ? (

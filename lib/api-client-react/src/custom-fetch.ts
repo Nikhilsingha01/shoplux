@@ -398,7 +398,7 @@ export async function customFetch<T = unknown>(
     const adminToken = localStorage.getItem("adminToken");
     if (adminToken && !headers.has("x-admin-token")) {
       const urlStr = resolveUrl(input);
-      if (urlStr.includes("/api/admin/") || urlStr.includes("/admin/")) {
+      if (urlStr.includes("/api/") || urlStr.includes("/admin/")) {
         headers.set("x-admin-token", adminToken);
       }
     }

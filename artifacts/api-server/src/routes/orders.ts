@@ -167,8 +167,8 @@ async function buildEmailData(
       : null,
     storeName,
     createdAt:
-      fullOrder.createdAt instanceof Date
-        ? fullOrder.createdAt.toISOString()
+      (fullOrder.createdAt as any) instanceof Date
+        ? (fullOrder.createdAt as any).toISOString()
         : String(fullOrder.createdAt),
   };
 }
@@ -391,7 +391,7 @@ router.get("/orders/:id", requireAuth, async (req, res): Promise<void> => {
 // ─── POST /orders/:id/cancel — customer cancels order ────────────────────────
 
 router.post("/orders/:id/cancel", requireAuth, async (req, res): Promise<void> => {
-  const orderId = parseInt(req.params.id, 10);
+  const orderId = parseInt(req.params.id as string, 10);
   if (isNaN(orderId)) {
     res.status(400).json({ error: "Invalid order ID" });
     return;
@@ -439,7 +439,7 @@ router.post("/orders/:id/cancel", requireAuth, async (req, res): Promise<void> =
 // ─── PATCH /orders/:id/address — customer updates address ──────────────────────
 
 router.patch("/orders/:id/address", requireAuth, async (req, res): Promise<void> => {
-  const orderId = parseInt(req.params.id, 10);
+  const orderId = parseInt(req.params.id as string, 10);
   const addressId = typeof req.body.addressId === 'number' ? req.body.addressId : parseInt(req.body.addressId, 10);
   if (isNaN(orderId) || isNaN(addressId)) {
     res.status(400).json({ error: "Invalid order ID or address ID" });
@@ -671,7 +671,7 @@ router.post("/orders/payment/verify", requireAuth, async (req, res): Promise<voi
 
 router.post("/orders/:id/cancel", requireAuth, async (req, res): Promise<void> => {
   try {
-    const orderId = parseInt(req.params.id, 10);
+    const orderId = parseInt(req.params.id as string, 10);
     const userId = (req as typeof req & { userId: string }).userId;
 
     const [order] = await db
@@ -726,7 +726,7 @@ router.post("/orders/:id/cancel", requireAuth, async (req, res): Promise<void> =
 
 router.patch("/orders/:id/address", requireAuth, async (req, res): Promise<void> => {
   try {
-    const orderId = parseInt(req.params.id, 10);
+    const orderId = parseInt(req.params.id as string, 10);
     const { addressId } = req.body;
     const userId = (req as typeof req & { userId: string }).userId;
 
@@ -785,7 +785,7 @@ router.patch("/orders/:id/address", requireAuth, async (req, res): Promise<void>
 
 router.post("/orders/:id/pay-online", requireAuth, async (req, res): Promise<void> => {
   try {
-    const orderId = parseInt(req.params.id, 10);
+    const orderId = parseInt(req.params.id as string, 10);
     const userId = (req as typeof req & { userId: string }).userId;
 
     const [order] = await db
@@ -849,8 +849,8 @@ router.post("/orders/:id/pay-online", requireAuth, async (req, res): Promise<voi
 
 router.post("/orders/:id/items/:itemId/return", requireAuth, async (req, res): Promise<void> => {
   try {
-    const orderId = parseInt(req.params.id, 10);
-    const itemId = parseInt(req.params.itemId, 10);
+    const orderId = parseInt(req.params.id as string, 10);
+    const itemId = parseInt(req.params.itemId as string, 10);
     const { reason, imageUrl, bankName, accountNumber, ifscCode, accountHolderName } = req.body;
 
     if (!reason) {
@@ -1027,7 +1027,7 @@ router.get("/admin/returns", requireAdmin, async (req, res): Promise<void> => {
 
 router.patch("/admin/returns/:id/status", requireAdmin, async (req, res): Promise<void> => {
   try {
-    const returnId = parseInt(req.params.id, 10);
+    const returnId = parseInt(req.params.id as string, 10);
     const { status } = req.body; // "approved" or "rejected"
 
     if (status !== "approved" && status !== "rejected") {

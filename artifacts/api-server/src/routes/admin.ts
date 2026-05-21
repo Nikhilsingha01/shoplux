@@ -4,23 +4,15 @@ import { db, adminSettingsTable, ordersTable, productsTable, appUsersTable } fro
 import { UpdateAdminSettingsBody, ListUsersQueryParams } from "@workspace/api-zod";
 import { requireAdmin } from "../middlewares/auth";
 import multer from "multer";
-import path from "path";
-import fs from "fs";
+import { uploadToSupabase } from "../lib/supabase";
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(process.cwd(), "uploads");
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
   }
 });
-const upload = multer({ storage });
 
 const router = Router();
 
@@ -166,14 +158,18 @@ router.get("/admin/users", requireAdmin, async (req, res): Promise<void> => {
   });
 });
 
-router.post("/admin/upload", requireAdmin, upload.single("image"), (req, res): void => {
+router.post("/admin/upload", requireAdmin, upload.single("image"), async (req, res): Promise<void> => {
   if (!req.file) {
     res.status(400).json({ error: "No file uploaded" });
     return;
   }
   
-  // Return relative URL so frontend can display it
-  res.json({ url: `/uploads/${req.file.filename}` });
+  try {
+    const publicUrl = await uploadToSupabase(req.file.buffer, req.file.originalname, req.file.mimetype);
+    res.json({ url: publicUrl });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || "Failed to upload image to Supabase Storage" });
+  }
 });
 
 export default router;

@@ -36,6 +36,8 @@ export interface Product {
   /** @nullable */
   rating?: number | null;
   reviewCount?: number;
+  deliveryCharge?: number;
+  isDeliveryChargeApplicable?: boolean;
   createdAt: string;
 }
 
@@ -55,6 +57,8 @@ export interface ProductInput {
   isTrending?: boolean;
   isNewArrival?: boolean;
   isBestSeller?: boolean;
+  deliveryCharge?: number;
+  isDeliveryChargeApplicable?: boolean;
 }
 
 export interface ProductUpdate {
@@ -154,6 +158,8 @@ export interface OrderItem {
   quantity: number;
   /** @nullable */
   variant?: string | null;
+  /** @nullable */
+  returnStatus?: string | null;
 }
 
 export interface OrderItemInput {

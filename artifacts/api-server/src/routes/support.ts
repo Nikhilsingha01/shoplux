@@ -91,7 +91,7 @@ router.get("/admin/support", requireAdmin, async (req, res): Promise<void> => {
 
 router.patch("/admin/support/:id/read", requireAdmin, async (req, res): Promise<void> => {
   try {
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id as string, 10);
     await db.execute(sql`UPDATE support_messages SET status = 'read' WHERE id = ${id}`);
     res.json({ success: true });
   } catch (error: any) {

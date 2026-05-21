@@ -266,7 +266,7 @@ export default function Checkout() {
       {
         onSuccess: (paymentOrder) => {
           if (paymentOrder.key === "rzp_test_mock") {
-            setMockPaymentOrderData(paymentOrder);
+            setMockPaymentOrderData(paymentOrder as { id: string; key: string });
             setMockOrderInput(orderInput);
             setShowMockPaymentDialog(true);
             return;
