@@ -61,33 +61,47 @@ function getSupabaseUrl(): string | null {
   return null;
 }
 
-const supabaseUrl = getSupabaseUrl();
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const anonKey = process.env.SUPABASE_ANON_KEY;
-const supabaseKey = serviceRoleKey || anonKey;
-
-console.log("-----------------------------------------------------------------");
-console.log("DIAGNOSTIC - Supabase Storage Initialization:");
-console.log("Derived Supabase URL:", supabaseUrl || "NOT DERIVED (DATABASE_URL missing or unrecognized format)");
-console.log("SUPABASE_SERVICE_ROLE_KEY present:", !!serviceRoleKey);
-console.log("SUPABASE_ANON_KEY present:", !!anonKey);
-console.log("SUPABASE_URL env var set:", !!process.env.SUPABASE_URL);
-console.log("DATABASE_URL env var set:", !!process.env.DATABASE_URL);
-if (process.env.DATABASE_URL) {
-  const anonymizedDbUrl = process.env.DATABASE_URL.replace(/:[^@]+@/, ":****@");
-  console.log("DATABASE_URL format:", anonymizedDbUrl);
-}
-console.log("-----------------------------------------------------------------");
-
 let supabase: any = null;
+let supabaseUrl: string | null = null;
+let initialized = false;
 
-if (supabaseUrl && supabaseKey) {
-  supabase = createClient(supabaseUrl, supabaseKey);
-  logger.info({ supabaseUrl }, "Supabase Storage client initialized successfully");
-} else {
-  logger.warn(
-    "Supabase credentials not fully configured. Please set SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_ANON_KEY) in .env. Falling back to local/disabled uploads."
-  );
+function ensureSupabaseInitialized() {
+  if (initialized) return;
+
+  // Force loading dotenv again from multiple possible locations to ensure any newly set env variables are fully picked up
+  dotenv.config();
+  dotenv.config({ path: path.resolve(process.cwd(), "../../.env") });
+  dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
+  dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+  dotenv.config({ path: path.resolve(process.cwd(), "artifacts/api-server/.env") });
+
+  supabaseUrl = getSupabaseUrl();
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const anonKey = process.env.SUPABASE_ANON_KEY;
+  const supabaseKey = serviceRoleKey || anonKey;
+
+  console.log("-----------------------------------------------------------------");
+  console.log("DIAGNOSTIC - Supabase Storage Initialization (Dynamic/Lazy):");
+  console.log("Derived Supabase URL:", supabaseUrl || "NOT DERIVED (DATABASE_URL missing or unrecognized format)");
+  console.log("SUPABASE_SERVICE_ROLE_KEY present:", !!serviceRoleKey);
+  console.log("SUPABASE_ANON_KEY present:", !!anonKey);
+  console.log("SUPABASE_URL env var set:", !!process.env.SUPABASE_URL);
+  console.log("DATABASE_URL env var set:", !!process.env.DATABASE_URL);
+  if (process.env.DATABASE_URL) {
+    const anonymizedDbUrl = process.env.DATABASE_URL.replace(/:[^@]+@/, ":****@");
+    console.log("DATABASE_URL format:", anonymizedDbUrl);
+  }
+  console.log("-----------------------------------------------------------------");
+
+  if (supabaseUrl && supabaseKey) {
+    supabase = createClient(supabaseUrl, supabaseKey);
+    logger.info({ supabaseUrl }, "Supabase Storage client initialized successfully");
+  } else {
+    logger.warn(
+      "Supabase credentials not fully configured. Please set SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_ANON_KEY) in env. Falling back to local/disabled uploads."
+    );
+  }
+  initialized = true;
 }
 
 /**
@@ -102,6 +116,7 @@ export async function uploadToSupabase(
   originalName: string,
   mimeType: string
 ): Promise<string> {
+  ensureSupabaseInitialized();
   if (!supabase) {
     throw new Error("Supabase client is not configured. Set SUPABASE_SERVICE_ROLE_KEY in .env");
   }
@@ -167,6 +182,7 @@ export function resolveImageUrl(imgPath: string | null | undefined): string | nu
   if (imgPath.startsWith("http://") || imgPath.startsWith("https://")) {
     return imgPath;
   }
+  ensureSupabaseInitialized();
   const cleanPath = imgPath.replace(/^\/?(api\/)?uploads\//, "");
   const bucketName = process.env.SUPABASE_BUCKET || "shoplux-assets";
   if (supabaseUrl) {
