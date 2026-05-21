@@ -22,6 +22,7 @@ import {
   VerifyPaymentBody,
 } from "@workspace/api-zod";
 import { requireAuth, requireAdmin } from "../middlewares/auth";
+import { resolveImageUrl } from "../lib/supabase";
 import { logger } from "../lib/logger";
 import {
   sendOrderPlacedEmail,
@@ -98,7 +99,7 @@ async function buildOrderResponse(order: typeof ordersTable.$inferSelect) {
     return {
       ...i,
       price: Number(i.price),
-      productImage: i.productImage?.startsWith("/api/uploads/") ? i.productImage.replace("/api/uploads/", "/uploads/") : i.productImage,
+      productImage: resolveImageUrl(i.productImage),
       returnStatus: ret ? ret.status : null,
       returnReason: ret ? ret.reason : null,
       returnId: ret ? ret.id : null,
@@ -1001,7 +1002,7 @@ router.get("/admin/returns", requireAdmin, async (req, res): Promise<void> => {
           },
           item: orderItem ? {
             productName: orderItem.productName,
-            productImage: orderItem.productImage?.startsWith("/api/uploads/") ? orderItem.productImage.replace("/api/uploads/", "/uploads/") : orderItem.productImage,
+            productImage: resolveImageUrl(orderItem.productImage),
             price: Number(orderItem.price),
             quantity: orderItem.quantity,
             variant: orderItem.variant,

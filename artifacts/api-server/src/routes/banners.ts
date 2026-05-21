@@ -8,6 +8,7 @@ import {
   DeleteBannerParams,
 } from "@workspace/api-zod";
 import { requireAdmin } from "../middlewares/auth";
+import { resolveImageUrl } from "../lib/supabase";
 
 const router = Router();
 
@@ -20,7 +21,7 @@ router.get("/banners", async (_req, res): Promise<void> => {
 
   const cleanedBanners = banners.map(b => ({
     ...b,
-    imageUrl: b.imageUrl.startsWith("/api/uploads/") ? b.imageUrl.replace("/api/uploads/", "/uploads/") : b.imageUrl
+    imageUrl: resolveImageUrl(b.imageUrl) ?? b.imageUrl
   }));
 
   res.json(cleanedBanners);
@@ -35,7 +36,7 @@ router.post("/banners", requireAdmin, async (req, res): Promise<void> => {
 
   const [banner] = await db.insert(bannersTable).values(parsed.data).returning();
   if (banner) {
-    banner.imageUrl = banner.imageUrl.startsWith("/api/uploads/") ? banner.imageUrl.replace("/api/uploads/", "/uploads/") : banner.imageUrl;
+    banner.imageUrl = resolveImageUrl(banner.imageUrl) ?? banner.imageUrl;
   }
   res.status(201).json(banner);
 });
@@ -64,7 +65,7 @@ router.patch("/banners/:id", requireAdmin, async (req, res): Promise<void> => {
     return;
   }
 
-  banner.imageUrl = banner.imageUrl.startsWith("/api/uploads/") ? banner.imageUrl.replace("/api/uploads/", "/uploads/") : banner.imageUrl;
+  banner.imageUrl = resolveImageUrl(banner.imageUrl) ?? banner.imageUrl;
   res.json(banner);
 });
 

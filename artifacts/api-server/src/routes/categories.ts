@@ -8,6 +8,7 @@ import {
   DeleteCategoryParams,
 } from "@workspace/api-zod";
 import { requireAdmin } from "../middlewares/auth";
+import { resolveImageUrl } from "../lib/supabase";
 
 const router = Router();
 
@@ -28,7 +29,7 @@ router.get("/categories", async (_req, res): Promise<void> => {
 
   res.json(cats.map((c) => ({
     ...c,
-    image: c.image?.startsWith("/api/uploads/") ? c.image.replace("/api/uploads/", "/uploads/") : c.image,
+    image: resolveImageUrl(c.image),
     productCount: Number(c.productCount),
   })));
 });
@@ -42,7 +43,7 @@ router.post("/categories", requireAdmin, async (req, res): Promise<void> => {
 
   const [cat] = await db.insert(categoriesTable).values(parsed.data).returning();
   if (cat && cat.image) {
-    cat.image = cat.image.startsWith("/api/uploads/") ? cat.image.replace("/api/uploads/", "/uploads/") : cat.image;
+    cat.image = resolveImageUrl(cat.image) ?? cat.image;
   }
   res.status(201).json({ ...cat, productCount: 0 });
 });
@@ -72,7 +73,7 @@ router.patch("/categories/:id", requireAdmin, async (req, res): Promise<void> =>
   }
 
   if (cat.image) {
-    cat.image = cat.image.startsWith("/api/uploads/") ? cat.image.replace("/api/uploads/", "/uploads/") : cat.image;
+    cat.image = resolveImageUrl(cat.image) ?? cat.image;
   }
   res.json({ ...cat, productCount: 0 });
 });

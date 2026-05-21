@@ -109,7 +109,7 @@ export async function uploadToSupabase(
   // Create a unique file name under the uploads folder to avoid collisions
   const ext = originalName.split(".").pop() || "png";
   const uniqueName = `uploads/${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
-  const bucketName = process.env.SUPABASE_BUCKET || "shoplux";
+  const bucketName = process.env.SUPABASE_BUCKET || "shoplux-assets";
 
   // Proactively check and create the bucket if missing (requires service role key privileges)
   try {
@@ -156,3 +156,22 @@ export async function uploadToSupabase(
   logger.info({ publicUrl: publicUrlData.publicUrl }, "Supabase Storage upload successful");
   return publicUrlData.publicUrl;
 }
+
+/**
+ * Automatically converts a relative image string (e.g. '/uploads/filename.png' or '/api/uploads/filename.png')
+ * into the fully-qualified Supabase Storage public URL if possible.
+ * If the image path is already an absolute URL, it is returned as-is.
+ */
+export function resolveImageUrl(imgPath: string | null | undefined): string | null {
+  if (!imgPath) return null;
+  if (imgPath.startsWith("http://") || imgPath.startsWith("https://")) {
+    return imgPath;
+  }
+  const cleanPath = imgPath.replace(/^\/?(api\/)?uploads\//, "");
+  const bucketName = process.env.SUPABASE_BUCKET || "shoplux-assets";
+  if (supabaseUrl) {
+    return `${supabaseUrl}/storage/v1/object/public/${bucketName}/uploads/${cleanPath}`;
+  }
+  return imgPath;
+}
+

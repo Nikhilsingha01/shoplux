@@ -10,12 +10,13 @@ import {
   DeleteProductParams,
 } from "@workspace/api-zod";
 import { requireAuth, requireAdmin } from "../middlewares/auth";
+import { resolveImageUrl } from "../lib/supabase";
 
 const router = Router();
 
 function formatProduct(p: Record<string, unknown>, categoryName?: string | null) {
   const images = Array.isArray(p.images)
-    ? p.images.map((img: string) => img?.startsWith("/api/uploads/") ? img.replace("/api/uploads/", "/uploads/") : img)
+    ? p.images.map((img: string) => resolveImageUrl(img) || img)
     : p.images;
   return {
     ...p,
