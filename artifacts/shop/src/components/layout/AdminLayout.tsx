@@ -65,10 +65,22 @@ function Sidebar({ currentPath, onClose }: { currentPath: string; onClose?: () =
           );
         })}
       </div>
-      <div className="p-4 border-t">
+      <div className="p-4 border-t space-y-3">
         <Link href="/" className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-2">
           ← Back to Store
         </Link>
+        <button
+          onClick={() => {
+            localStorage.removeItem("isAdmin");
+            localStorage.removeItem("adminEmail");
+            localStorage.removeItem("adminToken");
+
+            window.location.href = "/admin-login";
+          }}
+          className="w-full bg-black hover:bg-black/90 text-white py-2 rounded-lg text-sm font-medium transition-colors"
+        >
+          Logout
+        </button>
       </div>
     </nav>
   );
@@ -90,21 +102,6 @@ export function AdminLayout({ children, title }: { children: React.ReactNode; ti
       {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-background border-r fixed h-full z-30">
         <Sidebar currentPath={location} />
-
-        <div className="mt-auto p-4">
-          <button
-            onClick={() => {
-              localStorage.removeItem("isAdmin");
-              localStorage.removeItem("adminEmail");
-              localStorage.removeItem("adminToken");
-
-              window.location.href = "/admin-login";
-            }}
-            className="w-full bg-black text-white py-2 rounded-lg"
-          >
-            Logout
-          </button>
-        </div>
       </aside>
 
       {/* Mobile sidebar overlay */}

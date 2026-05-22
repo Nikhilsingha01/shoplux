@@ -74,6 +74,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Products from "@/pages/products";
 import ProductDetail from "@/pages/product-detail";
+import Categories from "@/pages/categories";
 import Cart from "@/pages/cart";
 import Checkout from "@/pages/checkout";
 import Account from "@/pages/account";
@@ -186,6 +187,16 @@ function ClerkTokenInitializer() {
   return null;
 }
 
+function ScrollToTop() {
+  const [location] = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [location]);
+
+  return null;
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -211,11 +222,13 @@ function ClerkProviderWithRoutes() {
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
         <ClerkTokenInitializer />
+        <ScrollToTop />
         <Switch>
           <Route path="/" component={Home} />
           
           <Route path="/products" component={Products} />
           <Route path="/products/:id" component={ProductDetail} />
+          <Route path="/categories" component={Categories} />
           
           <Route path="/cart" component={Cart} />
           <Route path="/checkout" component={Checkout} />

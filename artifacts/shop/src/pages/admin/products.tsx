@@ -88,9 +88,9 @@ function ProductForm({
   const imageList = form.images.split("\n").map((s) => s.trim()).filter(Boolean);
 
   return (
-    <div className="space-y-5 max-h-[70vh] overflow-y-auto pr-1">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2 space-y-1">
+    <div className="space-y-5 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto pr-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="col-span-1 sm:col-span-2 space-y-1">
           <label className="text-sm font-medium">Product Name *</label>
           <input
             className="w-full border border-border px-3 py-2 rounded-md text-sm focus:outline-none focus:border-primary"
@@ -134,7 +134,7 @@ function ProductForm({
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="space-y-1">
           <label className="text-sm font-medium">Price (₹) *</label>
           <input
@@ -284,7 +284,7 @@ function ProductForm({
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1">
           <label className="text-sm font-medium">Variants</label>
           <input
