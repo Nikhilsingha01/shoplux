@@ -11,6 +11,7 @@ const STORE_URL = process.env.STORE_URL ?? "https://shoplux.in";
 
 export interface OrderEmailData {
   orderId: number;
+  customerOrderNumber?: number;
   customerName: string;
   customerEmail: string;
   status: string;
@@ -199,9 +200,10 @@ function statusBadge(status: string, color = "#c49a2a"): string {
 // ─── Template Builders ────────────────────────────────────────────────────────
 
 function orderPlacedTemplate(data: OrderEmailData, storeName: string): string {
+  const orderDisplayId = data.customerOrderNumber ?? data.orderId;
   const body = `
     <h1 style="font-family:'Playfair Display',Georgia,serif; font-size:26px; font-weight:700; color:#1a1a1a; margin-bottom:4px;">Order Confirmed</h1>
-    <p style="color:#888; font-size:13px; margin-bottom:24px;">Order #${data.orderId} · Placed on ${new Date(data.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</p>
+    <p style="color:#888; font-size:13px; margin-bottom:24px;">Order #${orderDisplayId} · Placed on ${new Date(data.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</p>
 
     <p style="font-size:15px; color:#333; line-height:1.6;">Hi <strong>${data.customerName}</strong>,</p>
     <p style="font-size:14px; color:#555; line-height:1.7; margin-top:10px;">
@@ -223,17 +225,18 @@ function orderPlacedTemplate(data: OrderEmailData, storeName: string): string {
       ${ctaButton("Track Order", `${STORE_URL}/orders/${data.orderId}`)}
     </div>
   `;
-  return baseLayout(storeName, `Order #${data.orderId} Confirmed — ${storeName}`, body);
+  return baseLayout(storeName, `Order #${orderDisplayId} Confirmed — ${storeName}`, body);
 }
 
 function paymentSuccessTemplate(data: OrderEmailData, storeName: string): string {
+  const orderDisplayId = data.customerOrderNumber ?? data.orderId;
   const body = `
     <div style="text-align:center; margin-bottom:24px;">
       <div style="width:64px; height:64px; background:#e8f5ee; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; margin-bottom:12px;">
         <div style="font-size:32px;">✓</div>
       </div>
       <h1 style="font-family:'Playfair Display',Georgia,serif; font-size:26px; font-weight:700; color:#2d7a4f; margin-bottom:4px;">Payment Successful</h1>
-      <p style="color:#888; font-size:13px;">Order #${data.orderId}</p>
+      <p style="color:#888; font-size:13px;">Order #${orderDisplayId}</p>
     </div>
 
     <p style="font-size:15px; color:#333; line-height:1.6;">Hi <strong>${data.customerName}</strong>,</p>
@@ -258,10 +261,11 @@ function paymentSuccessTemplate(data: OrderEmailData, storeName: string): string
       ${ctaButton("View Order", `${STORE_URL}/orders/${data.orderId}`)}
     </div>
   `;
-  return baseLayout(storeName, `Payment Confirmed — Order #${data.orderId}`, body);
+  return baseLayout(storeName, `Payment Confirmed — Order #${orderDisplayId}`, body);
 }
 
 function orderStatusTemplate(data: OrderEmailData, storeName: string): string {
+  const orderDisplayId = data.customerOrderNumber ?? data.orderId;
   const statusConfig: Record<string, { title: string; message: string; color: string; icon: string }> = {
     confirmed: {
       title: "Order Confirmed",
@@ -305,7 +309,7 @@ function orderStatusTemplate(data: OrderEmailData, storeName: string): string {
   const body = `
     <div style="border-left:4px solid ${cfg.color}; padding:16px 20px; margin-bottom:24px; background:${cfg.color}10; border-radius:0 2px 2px 0;">
       <h1 style="font-family:'Playfair Display',Georgia,serif; font-size:22px; font-weight:700; color:${cfg.color}; margin-bottom:4px;">${cfg.title}</h1>
-      <p style="color:#555; font-size:13px;">Order #${data.orderId}</p>
+      <p style="color:#555; font-size:13px;">Order #${orderDisplayId}</p>
     </div>
 
     <p style="font-size:15px; color:#333; line-height:1.6;">Hi <strong>${data.customerName}</strong>,</p>
@@ -319,7 +323,7 @@ function orderStatusTemplate(data: OrderEmailData, storeName: string): string {
 
     <div style="margin-top:20px;">
       <div style="font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#888; margin-bottom:8px;">Order Summary</div>
-      <div style="font-size:13px; color:#555; font-weight:500; margin-bottom:4px;">Order #${data.orderId} · ${data.items.length} item${data.items.length !== 1 ? "s" : ""}</div>
+      <div style="font-size:13px; color:#555; font-weight:500; margin-bottom:4px;">Order #${orderDisplayId} · ${data.items.length} item${data.items.length !== 1 ? "s" : ""}</div>
       <div style="font-size:14px; color:#1a1a1a; font-weight:700;">${inr(data.totalAmount)}</div>
     </div>
 
@@ -335,7 +339,7 @@ function orderStatusTemplate(data: OrderEmailData, storeName: string): string {
       <a href="${STORE_URL}/products" style="font-size:12px; color:#c49a2a; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Shop Again</a>
     </div>` : ""}
   `;
-  return baseLayout(storeName, `${cfg.title} — Order #${data.orderId}`, body);
+  return baseLayout(storeName, `${cfg.title} — Order #${orderDisplayId}`, body);
 }
 
 // ─── Send functions ────────────────────────────────────────────────────────────
@@ -374,9 +378,10 @@ async function sendEmail(
 export async function sendOrderPlacedEmail(data: OrderEmailData): Promise<void> {
   if (!data.customerEmail) return;
   const storeName = data.storeName ?? "ShopLux";
+  const orderDisplayId = data.customerOrderNumber ?? data.orderId;
   await sendEmail(
     data.customerEmail,
-    `Order #${data.orderId} Confirmed — ${storeName}`,
+    `Order #${orderDisplayId} Confirmed — ${storeName}`,
     orderPlacedTemplate(data, storeName),
     "order_placed"
   );
@@ -385,9 +390,10 @@ export async function sendOrderPlacedEmail(data: OrderEmailData): Promise<void> 
 export async function sendPaymentSuccessEmail(data: OrderEmailData): Promise<void> {
   if (!data.customerEmail) return;
   const storeName = data.storeName ?? "ShopLux";
+  const orderDisplayId = data.customerOrderNumber ?? data.orderId;
   await sendEmail(
     data.customerEmail,
-    `Payment Confirmed — Order #${data.orderId}`,
+    `Payment Confirmed — Order #${orderDisplayId}`,
     paymentSuccessTemplate(data, storeName),
     "payment_success"
   );
@@ -396,16 +402,17 @@ export async function sendPaymentSuccessEmail(data: OrderEmailData): Promise<voi
 export async function sendOrderStatusEmail(data: OrderEmailData): Promise<void> {
   if (!data.customerEmail) return;
   const storeName = data.storeName ?? "ShopLux";
+  const orderDisplayId = data.customerOrderNumber ?? data.orderId;
 
   const subjectMap: Record<string, string> = {
-    confirmed: `Your order #${data.orderId} is confirmed`,
-    shipped: `Order #${data.orderId} has been shipped`,
-    out_for_delivery: `Order #${data.orderId} is out for delivery`,
-    delivered: `Order #${data.orderId} delivered — enjoy your purchase!`,
-    cancelled: `Order #${data.orderId} has been cancelled`,
+    confirmed: `Your order #${orderDisplayId} is confirmed`,
+    shipped: `Order #${orderDisplayId} has been shipped`,
+    out_for_delivery: `Order #${orderDisplayId} is out for delivery`,
+    delivered: `Order #${orderDisplayId} delivered — enjoy your purchase!`,
+    cancelled: `Order #${orderDisplayId} has been cancelled`,
   };
 
-  const subject = subjectMap[data.status] ?? `Update on Order #${data.orderId}`;
+  const subject = subjectMap[data.status] ?? `Update on Order #${orderDisplayId}`;
   await sendEmail(
     data.customerEmail,
     subject,

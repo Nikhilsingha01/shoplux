@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 const STATUSES = ["pending", "confirmed", "shipped", "out_for_delivery", "delivered", "cancelled"] as const;
+const ACTIVE_STATUSES = ["pending", "confirmed", "shipped", "out_for_delivery", "delivered"] as const;
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -36,9 +37,15 @@ export default function AdminOrders() {
   const [updating, setUpdating] = useState<number | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
 
-  const orders = (ordersData?.orders ?? []).filter(
-    (o) => !statusFilter || o.status === statusFilter,
-  );
+  const orders = (ordersData?.orders ?? []).filter((o) => {
+    if (statusFilter === "cancelled") {
+      return o.status === "cancelled";
+    }
+    if (!statusFilter) {
+      return o.status !== "cancelled";
+    }
+    return o.status === statusFilter;
+  });
 
   const handleStatusChange = (orderId: number, newStatus: string) => {
     setUpdating(orderId);
@@ -61,14 +68,14 @@ export default function AdminOrders() {
   return (
     <AdminLayout title="Orders">
       <div className="flex flex-col sm:flex-row gap-4 mb-6 items-start sm:items-center justify-between">
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
           <button
             onClick={() => setStatusFilter("")}
             className={`px-3 py-1.5 text-xs rounded-full border font-medium transition-colors ${!statusFilter ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}
           >
-            All
+            All Active
           </button>
-          {STATUSES.map((s) => (
+          {ACTIVE_STATUSES.map((s) => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
@@ -77,6 +84,13 @@ export default function AdminOrders() {
               {s.replace("_", " ")}
             </button>
           ))}
+          <div className="h-6 w-px bg-border mx-2" />
+          <button
+            onClick={() => setStatusFilter("cancelled")}
+            className={`px-3 py-1.5 text-xs rounded-full border font-medium transition-colors ${statusFilter === "cancelled" ? "bg-destructive text-destructive-foreground border-destructive" : "border-border hover:bg-muted text-destructive hover:bg-destructive/10"}`}
+          >
+            Cancelled Orders
+          </button>
         </div>
         <p className="text-sm text-muted-foreground">{orders.length} orders</p>
       </div>

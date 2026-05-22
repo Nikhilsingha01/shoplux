@@ -137,6 +137,7 @@ async function buildEmailData(
 
   return {
     orderId: fullOrder.id,
+    customerOrderNumber: fullOrder.customerOrderNumber,
     customerName: fullOrder.customerName ?? "Valued Customer",
     customerEmail: email,
     status: fullOrder.status,
@@ -434,7 +435,18 @@ router.post("/orders/:id/cancel", requireAuth, async (req, res): Promise<void> =
     .where(eq(ordersTable.id, order.id))
     .returning();
 
-  res.json(await buildOrderResponse(updatedOrder));
+  const [settings] = await db.select().from(adminSettingsTable).limit(1);
+  const storeName = settings?.storeName ?? "ShopLux";
+  const fullOrder = await buildOrderResponse(updatedOrder);
+  res.json(fullOrder);
+
+  // Send order cancellation email asynchronously
+  const emailData = await buildEmailData(fullOrder, storeName);
+  if (emailData) {
+    sendOrderStatusEmail(emailData).catch((e) =>
+      logger.error({ e }, "cancel email failed")
+    );
+  }
 });
 
 // ─── PATCH /orders/:id/address — customer updates address ──────────────────────
@@ -668,60 +680,7 @@ router.post("/orders/payment/verify", requireAuth, async (req, res): Promise<voi
   }
 });
 
-// ─── POST /orders/:id/cancel — customer cancel order ─────────────────────────
 
-router.post("/orders/:id/cancel", requireAuth, async (req, res): Promise<void> => {
-  try {
-    const orderId = parseInt(req.params.id as string, 10);
-    const userId = (req as typeof req & { userId: string }).userId;
-
-    const [order] = await db
-      .select()
-      .from(ordersTable)
-      .where(and(eq(ordersTable.id, orderId), eq(ordersTable.userId, userId)))
-      .limit(1);
-
-    if (!order) {
-      res.status(404).json({ error: "Order not found" });
-      return;
-    }
-
-    if (order.status !== "pending" && order.status !== "confirmed") {
-      res.status(400).json({ error: `Cannot cancel order in status: ${order.status}` });
-      return;
-    }
-
-    // Restore stock for each item
-    const items = await db.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, orderId));
-    for (const item of items) {
-      if (item.productId) {
-        const [product] = await db.select().from(productsTable).where(eq(productsTable.id, item.productId)).limit(1);
-        if (product) {
-          await db.update(productsTable).set({ stock: product.stock + item.quantity }).where(eq(productsTable.id, item.productId));
-        }
-      }
-    }
-
-    const [updated] = await db
-      .update(ordersTable)
-      .set({ status: "cancelled" })
-      .where(eq(ordersTable.id, orderId))
-      .returning();
-
-    const [settings] = await db.select().from(adminSettingsTable).limit(1);
-    const storeName = settings?.storeName ?? "ShopLux";
-    const fullOrder = await buildOrderResponse(updated);
-    res.json(fullOrder);
-
-    const emailData = await buildEmailData(fullOrder, storeName);
-    if (emailData) {
-      sendOrderStatusEmail(emailData).catch((e) => logger.error({ e }, "cancel email failed"));
-    }
-  } catch (error: any) {
-    console.error("Error cancelling order:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
 
 // ─── PATCH /orders/:id/address — customer change address ─────────────────────
 
@@ -975,7 +934,7 @@ router.get("/admin/returns", requireAdmin, async (req, res): Promise<void> => {
 
         return {
           ...ret,
-          imageUrl: (ret as any).image_url ?? null,
+          imageUrl: resolveImageUrl((ret as any).image_url),
           bankName: (ret as any).bank_name ?? null,
           accountNumber: (ret as any).account_number ?? null,
           ifscCode: (ret as any).ifsc_code ?? null,

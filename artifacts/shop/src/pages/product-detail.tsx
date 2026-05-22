@@ -17,6 +17,42 @@ import { ProductCard } from "@/components/ProductCard";
 import { Heart, Plus, Minus, Star, Truck, ShieldCheck, RefreshCcw, Share2 } from "lucide-react";
 import { useUser } from "@clerk/react";
 
+function parseDescription(descText: string) {
+  if (!descText) return { paragraphs: [], highlights: [], specs: [] };
+
+  // Break inline key-values separated by punctuation and spaces into distinct lines.
+  // E.g., "Material: Cotton. Sleeve: Short." -> "Material: Cotton\nSleeve: Short"
+  const processedText = descText.replace(/([.;,])\s+([A-Za-z\s_-]{2,25}):\s+/g, "$1\n$2: ");
+  const lines = processedText.split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0);
+
+  const paragraphs: string[] = [];
+  const highlights: string[] = [];
+  const specs: { key: string; value: string }[] = [];
+
+  for (const line of lines) {
+    // Matches bullet points (e.g. "- Material is cotton" or "• High quality")
+    const bulletMatch = line.match(/^[-*•]\s*(.+)$/) || line.match(/^\d+\.\s*(.+)$/);
+    if (bulletMatch) {
+      highlights.push(bulletMatch[1].trim());
+      continue;
+    }
+
+    // Matches specs (e.g. "Fabric: Cotton")
+    const specMatch = line.match(/^([^:]{2,30}):\s*(.+)$/);
+    if (specMatch) {
+      const key = specMatch[1].trim();
+      const value = specMatch[2].trim();
+      specs.push({ key, value: value.replace(/[.;,]+$/, "") });
+      continue;
+    }
+
+    // Otherwise it's a narrative paragraph
+    paragraphs.push(line);
+  }
+
+  return { paragraphs, highlights, specs };
+}
+
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const productId = parseInt(id || "0", 10);
@@ -249,11 +285,75 @@ export default function ProductDetail() {
               ) : null}
             </div>
 
-            {product.description && (
-              <p className="text-muted-foreground leading-relaxed mb-8 text-sm md:text-base">
-                {product.description}
-              </p>
-            )}
+            {product.description && (() => {
+              const { paragraphs, highlights, specs } = parseDescription(product.description);
+              const hasContent = paragraphs.length > 0 || highlights.length > 0 || specs.length > 0;
+              if (!hasContent) {
+                return (
+                  <p className="text-muted-foreground leading-relaxed mb-8 text-sm md:text-base">
+                    {product.description}
+                  </p>
+                );
+              }
+              return (
+                <div className="space-y-6 mb-8 border-t border-border pt-6 mt-2">
+                  {/* Narrative paragraphs */}
+                  {paragraphs.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Product Description</h4>
+                      {paragraphs.map((para, i) => (
+                        <p key={i} className="text-muted-foreground leading-relaxed text-sm">
+                          {para}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Highlights/Features */}
+                  {highlights.length > 0 && (
+                    <div className="space-y-3 pt-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Product Highlights</h4>
+                      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 list-none pl-0">
+                        {highlights.map((highlight, i) => (
+                          <li key={i} className="text-muted-foreground text-xs flex items-start gap-2">
+                            <span className="text-primary mt-1.5 h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
+                            <span>{highlight}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Specifications Table */}
+                  {specs.length > 0 && (
+                    <div className="space-y-3 pt-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Specifications</h4>
+                      <div className="border border-border/80 overflow-hidden rounded-none shadow-sm">
+                        <table className="w-full text-xs text-left border-collapse">
+                          <tbody>
+                            {specs.map((spec, i) => (
+                              <tr 
+                                key={i} 
+                                className={`border-b border-border/60 last:border-none transition-colors ${
+                                  i % 2 === 0 ? "bg-muted/30" : "bg-background"
+                                }`}
+                              >
+                                <td className="px-4 py-3 font-semibold text-muted-foreground uppercase tracking-wider w-1/3 bg-muted/10 border-r border-border/40 select-none">
+                                  {spec.key}
+                                </td>
+                                <td className="px-4 py-3 font-medium text-foreground w-2/3">
+                                  {spec.value}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             <div className="space-y-6 mb-8">
               {variantsList.length > 0 && (

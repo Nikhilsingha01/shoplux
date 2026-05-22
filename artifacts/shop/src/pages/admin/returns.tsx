@@ -5,7 +5,7 @@ import { useAuth } from "@clerk/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { toast } from "sonner";
-import { CheckCircle, XCircle, ArrowLeftRight, Clock, ChevronDown, ChevronUp, Image as ImageIcon, MapPin, Landmark as BankIcon } from "lucide-react";
+import { CheckCircle, XCircle, ArrowLeftRight, Clock, ChevronDown, ChevronUp, Image as ImageIcon, MapPin, Landmark as BankIcon, Copy, ExternalLink, ShoppingBag, CreditCard, Calendar, User } from "lucide-react";
 
 interface ReturnRequest {
   id: number;
@@ -23,6 +23,11 @@ interface ReturnRequest {
   order?: {
     id: number;
     totalAmount: number;
+    status: string;
+    paymentStatus: string;
+    paymentMethod: string;
+    createdAt: string;
+    customerOrderNumber?: number | null;
     address?: {
       id: number;
       fullName: string;
@@ -312,105 +317,243 @@ export default function AdminReturns() {
                   </tr>
                   {expandedId === req.id && (
                     <tr className="bg-muted/10 border-b border-border">
-                      <td colSpan={7} className="px-6 py-5 bg-muted/5">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                      <td colSpan={7} className="px-6 py-6 bg-muted/5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm">
                           
-                          {/* Section 1: Customer Profile & Shipping Address */}
-                          <div className="bg-background border border-border p-4 shadow-sm flex flex-col gap-3">
+                          {/* Card 1: Returned Item Details */}
+                          <div className="bg-background border border-border p-5 shadow-sm flex flex-col justify-between gap-4 transition-all hover:shadow-md">
+                            <div>
+                              <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 border-b pb-2 mb-3">
+                                <ShoppingBag className="w-4 h-4 text-primary" />
+                                Returned Item Details
+                              </h4>
+                              <div className="flex gap-3 mb-4">
+                                <div className="w-14 h-16 bg-muted flex-shrink-0 border flex items-center justify-center overflow-hidden">
+                                  {req.item.productImage ? (
+                                    <img
+                                      src={req.item.productImage}
+                                      alt={req.item.productName}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <ImageIcon className="w-5 h-5 text-muted-foreground/40" />
+                                  )}
+                                </div>
+                                <div className="space-y-1">
+                                  <span className="font-semibold text-foreground text-xs line-clamp-2 block leading-snug">
+                                    {req.item.productName}
+                                  </span>
+                                  <span className="text-[11px] text-muted-foreground block">
+                                    Qty: <span className="font-semibold text-foreground">{req.item.quantity}</span> • ₹{req.item.price.toLocaleString("en-IN")}
+                                  </span>
+                                  {req.item.variant && (
+                                    <span className="inline-block text-[10px] uppercase font-bold tracking-wider text-muted-foreground bg-muted px-2 py-0.5 mt-1 border">
+                                      {req.item.variant}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="space-y-2 text-xs border-t pt-3 border-dashed">
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Request ID:</span>
+                                  <span className="font-mono font-bold text-foreground">#RET-{req.id}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Request Date:</span>
+                                  <span className="font-medium text-foreground">
+                                    {new Date(req.createdAt).toLocaleDateString("en-IN", {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                    })}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="bg-muted/40 border border-border/80 p-3 rounded-none mt-2">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+                                Return Reason
+                              </span>
+                              <p className="text-xs text-foreground italic leading-relaxed">
+                                "{req.reason}"
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Card 2: Order & Delivery Details */}
+                          <div className="bg-background border border-border p-5 shadow-sm flex flex-col gap-3 transition-all hover:shadow-md">
                             <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 border-b pb-2 mb-1">
                               <MapPin className="w-4 h-4 text-primary" />
-                              Shipping & Customer Details
+                              Order & Delivery Details
                             </h4>
-                            <div className="space-y-2 text-xs">
+                            <div className="space-y-2.5 text-xs">
                               <div>
-                                <span className="text-muted-foreground block">Customer Name:</span>
-                                <span className="font-medium text-foreground">{req.user.name || "Customer"}</span>
+                                <span className="text-muted-foreground block">Order Identifier:</span>
+                                <span className="font-bold text-foreground block">
+                                  {req.order?.customerOrderNumber ? `Order #${req.order.customerOrderNumber}` : `Order #${req.orderId}`}
+                                  <span className="font-normal text-muted-foreground text-[10px] ml-1.5 font-mono">
+                                    (ID: {req.orderId})
+                                  </span>
+                                </span>
                               </div>
+                              
+                              <div className="grid grid-cols-2 gap-2 border-y border-dashed py-2.5 my-2">
+                                <div>
+                                  <span className="text-[10px] text-muted-foreground block uppercase">Total Amount</span>
+                                  <span className="font-bold text-foreground">₹{req.order?.totalAmount?.toLocaleString("en-IN") || "N/A"}</span>
+                                </div>
+                                <div>
+                                  <span className="text-[10px] text-muted-foreground block uppercase">Payment Method</span>
+                                  <span className="font-semibold text-foreground uppercase text-[10px] tracking-wider">{req.order?.paymentMethod || "N/A"}</span>
+                                </div>
+                                <div className="mt-1">
+                                  <span className="text-[10px] text-muted-foreground block uppercase">Payment Status</span>
+                                  <span className={`inline-block font-bold text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded border mt-0.5 ${
+                                    req.order?.paymentStatus === "paid" 
+                                      ? "bg-green-50 text-green-700 border-green-200" 
+                                      : "bg-amber-50 text-amber-700 border-amber-200"
+                                  }`}>
+                                    {req.order?.paymentStatus || "unknown"}
+                                  </span>
+                                </div>
+                                <div className="mt-1">
+                                  <span className="text-[10px] text-muted-foreground block uppercase">Order Status</span>
+                                  <span className="inline-block font-semibold text-[10px] text-foreground uppercase tracking-wider mt-0.5">
+                                    {req.order?.status || "unknown"}
+                                  </span>
+                                </div>
+                              </div>
+
                               <div>
-                                <span className="text-muted-foreground block">Phone:</span>
-                                <span className="font-medium text-foreground">{req.user.phone || "N/A"}</span>
+                                <span className="text-muted-foreground block">Customer:</span>
+                                <span className="font-medium text-foreground block">{req.user.name || "Customer"}</span>
+                                <span className="text-muted-foreground block text-[11px] font-mono mt-0.5 select-all">{req.user.email}</span>
+                                {req.user.phone && <span className="text-muted-foreground block text-[11px] mt-0.5">{req.user.phone}</span>}
                               </div>
+
                               {req.order?.address ? (
-                                <>
-                                  <div>
-                                    <span className="text-muted-foreground block">Delivery Address:</span>
-                                    <span className="font-medium text-foreground block">
-                                      {req.order.address.fullName} ({req.order.address.phone})
-                                    </span>
-                                    <span className="text-foreground block mt-0.5 leading-relaxed">
-                                      {req.order.address.addressLine}
-                                      {req.order.address.landmark && `, near ${req.order.address.landmark}`}
-                                    </span>
-                                    <span className="text-foreground block font-medium">
-                                      {req.order.address.city}, {req.order.address.state} - {req.order.address.pincode}
-                                    </span>
-                                  </div>
-                                </>
+                                <div className="border-t pt-2.5">
+                                  <span className="text-muted-foreground block">Delivery Address:</span>
+                                  <span className="text-foreground block mt-1 leading-relaxed font-sans text-[11px]">
+                                    <strong className="text-foreground">{req.order.address.fullName}</strong>
+                                    {req.order.address.phone && ` (${req.order.address.phone})`}
+                                    <br />
+                                    {req.order.address.addressLine}
+                                    {req.order.address.landmark && `, Near ${req.order.address.landmark}`}
+                                    <br />
+                                    {req.order.address.city}, {req.order.address.state} - <span className="font-semibold">{req.order.address.pincode}</span>
+                                  </span>
+                                </div>
                               ) : (
-                                <div className="text-muted-foreground italic">No shipping address associated.</div>
+                                <div className="text-muted-foreground text-[11px] italic border-t pt-2">No delivery address associated.</div>
                               )}
                             </div>
                           </div>
 
-                          {/* Section 2: Refund Bank Details */}
-                          <div className="bg-background border border-border p-4 shadow-sm flex flex-col gap-3">
+                          {/* Card 3: Secure Refund Bank Details */}
+                          <div className="bg-background border border-border p-5 shadow-sm flex flex-col gap-3 transition-all hover:shadow-md">
                             <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 border-b pb-2 mb-1">
                               <BankIcon className="w-4 h-4 text-primary" />
                               Refund Bank Details
                             </h4>
                             {req.bankName ? (
-                              <div className="space-y-2 text-xs">
-                                <div>
-                                  <span className="text-muted-foreground block">Bank Name:</span>
-                                  <span className="font-mono font-medium text-foreground">{req.bankName}</span>
+                              <div className="space-y-3 text-xs flex-1 flex flex-col justify-between">
+                                <div className="space-y-2.5">
+                                  <div>
+                                    <span className="text-muted-foreground block">Bank Name:</span>
+                                    <span className="font-semibold text-foreground text-xs">{req.bankName}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-muted-foreground block">Account Holder:</span>
+                                    <span className="font-medium text-foreground">{req.accountHolder || "N/A"}</span>
+                                  </div>
+                                  <div className="group relative">
+                                    <span className="text-muted-foreground block">Account Number:</span>
+                                    <div 
+                                      onClick={() => {
+                                        if (req.accountNumber) {
+                                          navigator.clipboard.writeText(req.accountNumber);
+                                          toast.success("Account number copied!");
+                                        }
+                                      }}
+                                      className="flex items-center justify-between font-mono font-medium text-foreground tracking-wider select-all bg-muted/60 hover:bg-muted cursor-pointer px-2 py-1.5 border border-border transition-colors group mt-0.5"
+                                      title="Click to copy account number"
+                                    >
+                                      <span>{req.accountNumber}</span>
+                                      <Copy className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground transition-colors ml-2 flex-shrink-0" />
+                                    </div>
+                                  </div>
+                                  <div className="group relative">
+                                    <span className="text-muted-foreground block">IFSC Code:</span>
+                                    <div 
+                                      onClick={() => {
+                                        if (req.ifscCode) {
+                                          navigator.clipboard.writeText(req.ifscCode);
+                                          toast.success("IFSC Code copied!");
+                                        }
+                                      }}
+                                      className="flex items-center justify-between font-mono font-medium text-foreground tracking-wider select-all bg-muted/60 hover:bg-muted cursor-pointer px-2 py-1.5 border border-border transition-colors group mt-0.5"
+                                      title="Click to copy IFSC code"
+                                    >
+                                      <span>{req.ifscCode}</span>
+                                      <Copy className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground transition-colors ml-2 flex-shrink-0" />
+                                    </div>
+                                  </div>
                                 </div>
-                                <div>
-                                  <span className="text-muted-foreground block">Account Holder:</span>
-                                  <span className="font-medium text-foreground">{req.accountHolder || "N/A"}</span>
-                                </div>
-                                <div>
-                                  <span className="text-muted-foreground block">Account Number:</span>
-                                  <span className="font-mono font-medium text-foreground tracking-wider select-all bg-muted px-1 py-0.5 rounded">{req.accountNumber}</span>
-                                </div>
-                                <div>
-                                  <span className="text-muted-foreground block">IFSC Code:</span>
-                                  <span className="font-mono font-medium text-foreground tracking-wider select-all bg-muted px-1 py-0.5 rounded">{req.ifscCode}</span>
-                                </div>
+                                <span className="text-[10px] text-muted-foreground block italic leading-snug bg-primary/5 p-2 border border-primary/10">
+                                  💡 Click account number or IFSC code to copy directly for quick processing.
+                                </span>
                               </div>
                             ) : (
-                              <div className="text-muted-foreground text-xs italic flex items-center h-full pb-8">
-                                No refund bank account details provided.
+                              <div className="text-muted-foreground text-xs italic flex flex-col items-center justify-center border border-dashed flex-1 py-8 text-center bg-muted/10">
+                                <BankIcon className="w-6 h-6 text-muted-foreground/30 mb-1.5" />
+                                <span>No refund bank account details provided.</span>
                               </div>
                             )}
                           </div>
 
-                          {/* Section 3: Return Proof Image */}
-                          <div className="bg-background border border-border p-4 shadow-sm flex flex-col gap-3">
+                          {/* Card 4: Uploaded Image Gallery */}
+                          <div className="bg-background border border-border p-5 shadow-sm flex flex-col gap-3 transition-all hover:shadow-md">
                             <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 border-b pb-2 mb-1">
                               <ImageIcon className="w-4 h-4 text-primary" />
                               Return Proof Image
                             </h4>
                             {req.imageUrl ? (
-                              <div className="flex flex-col gap-2">
-                                <a
-                                  href={req.imageUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="block aspect-[4/3] bg-muted border overflow-hidden relative group rounded cursor-pointer"
+                              <div className="flex flex-col gap-3 flex-1 justify-between">
+                                <div className="space-y-2">
+                                  <span className="text-muted-foreground text-[11px] block leading-relaxed">
+                                    Customer proof image uploaded at request time:
+                                  </span>
+                                  <a
+                                    href={req.imageUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block aspect-[4/3] bg-muted border overflow-hidden relative group rounded-none cursor-zoom-in"
+                                  >
+                                    <img
+                                      src={req.imageUrl}
+                                      alt="Return Proof"
+                                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                    />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold">
+                                      View Full Image
+                                    </div>
+                                  </a>
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full rounded-none h-8 text-[11px] font-semibold uppercase tracking-wider hover:bg-muted mt-2 border-border flex items-center justify-center gap-1.5"
+                                  onClick={() => window.open(req.imageUrl || "", "_blank")}
                                 >
-                                  <img
-                                    src={req.imageUrl}
-                                    alt="Return Proof"
-                                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                  />
-                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold">
-                                    View Full Image
-                                  </div>
-                                </a>
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                  Open In New Tab
+                                </Button>
                               </div>
                             ) : (
-                              <div className="text-muted-foreground text-xs italic flex items-center justify-center border border-dashed h-full py-8">
-                                No return proof image uploaded.
+                              <div className="text-muted-foreground text-xs italic flex flex-col items-center justify-center border border-dashed flex-1 py-8 text-center bg-muted/10">
+                                <ImageIcon className="w-6 h-6 text-muted-foreground/30 mb-1.5" />
+                                <span>No return proof image uploaded by customer.</span>
                               </div>
                             )}
                           </div>
