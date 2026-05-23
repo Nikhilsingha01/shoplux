@@ -2,7 +2,7 @@ import { Router } from "express";
 import { desc, sql, eq, and } from "drizzle-orm";
 import { db, adminSettingsTable, ordersTable, productsTable, appUsersTable } from "@workspace/db";
 import { UpdateAdminSettingsBody, ListUsersQueryParams } from "@workspace/api-zod";
-import { requireAdmin } from "../middlewares/auth";
+import { requireAdmin, requireAuth } from "../middlewares/auth";
 import multer from "multer";
 import { uploadToSupabase } from "../lib/supabase";
 
@@ -210,6 +210,20 @@ router.get("/admin/users", requireAdmin, async (req, res): Promise<void> => {
 });
 
 router.post("/admin/upload", requireAdmin, upload.single("image"), async (req, res): Promise<void> => {
+  if (!req.file) {
+    res.status(400).json({ error: "No file uploaded" });
+    return;
+  }
+  
+  try {
+    const publicUrl = await uploadToSupabase(req.file.buffer, req.file.originalname, req.file.mimetype);
+    res.json({ url: publicUrl });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || "Failed to upload image to Supabase Storage" });
+  }
+});
+
+router.post("/uploads", requireAuth, upload.single("file"), async (req, res): Promise<void> => {
   if (!req.file) {
     res.status(400).json({ error: "No file uploaded" });
     return;

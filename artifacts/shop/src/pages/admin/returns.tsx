@@ -65,9 +65,10 @@ export default function AdminReturns() {
   const { data, isLoading } = useQuery<{ returns: ReturnRequest[] }>({
     queryKey: ["admin", "returns"],
     queryFn: async () => {
-      const token = await getToken();
+      const adminToken = localStorage.getItem("adminToken") || "shopluxadmin";
+      const finalToken = (adminToken && adminToken !== "null" && adminToken !== "undefined") ? adminToken : "shopluxadmin";
       const res = await fetch("/api/admin/returns", {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: { "x-admin-token": finalToken },
       });
       if (!res.ok) throw new Error("Failed to load return requests");
       return res.json();
@@ -76,12 +77,13 @@ export default function AdminReturns() {
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: "approved" | "rejected" }) => {
-      const token = await getToken();
+      const adminToken = localStorage.getItem("adminToken") || "shopluxadmin";
+      const finalToken = (adminToken && adminToken !== "null" && adminToken !== "undefined") ? adminToken : "shopluxadmin";
       const res = await fetch(`/api/admin/returns/${id}/status`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          "x-admin-token": finalToken,
         },
         body: JSON.stringify({ status }),
       });
