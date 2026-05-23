@@ -20,9 +20,14 @@ import { useUser } from "@clerk/react";
 function parseDescription(descText: string) {
   if (!descText) return { paragraphs: [], highlights: [], specs: [] };
 
-  // Break inline key-values separated by punctuation and spaces into distinct lines.
+  // 1. Break inline key-values separated by punctuation and spaces into distinct lines.
   // E.g., "Material: Cotton. Sleeve: Short." -> "Material: Cotton\nSleeve: Short"
-  const processedText = descText.replace(/([.;,])\s+([A-Za-z\s_-]{2,25}):\s+/g, "$1\n$2: ");
+  let processedText = descText.replace(/([.;,])\s+([A-Za-z\s_-]{2,25}):\s+/g, "$1\n$2: ");
+
+  // 2. Split on all bullet point indicators as separators: ✔, ✓, •, *, and spaces-surrounded dashes (-)
+  // We replace them with newlines to break them into distinct lines for further parser processing.
+  processedText = processedText.replace(/([✔✓•*])|(\s+-\s+)/g, "\n");
+
   const lines = processedText.split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0);
 
   const paragraphs: string[] = [];
@@ -30,15 +35,18 @@ function parseDescription(descText: string) {
   const specs: { key: string; value: string }[] = [];
 
   for (const line of lines) {
-    // Matches bullet points (e.g. "- Material is cotton" or "• High quality")
-    const bulletMatch = line.match(/^[-*•]\s*(.+)$/) || line.match(/^\d+\.\s*(.+)$/);
+    // Matches bullet points (e.g. "✔ Material is cotton", "✓ Soft finish", "- Comfortable", etc.)
+    const bulletMatch = line.match(/^([✔✓•\-*]|\d+\.)\s*(.+)$/);
+    let content = line;
+    let isBullet = false;
+
     if (bulletMatch) {
-      highlights.push(bulletMatch[1].trim());
-      continue;
+      isBullet = true;
+      content = bulletMatch[2].trim();
     }
 
     // Matches specs (e.g. "Fabric: Cotton")
-    const specMatch = line.match(/^([^:]{2,30}):\s*(.+)$/);
+    const specMatch = content.match(/^([^:]{2,30}):\s*(.+)$/);
     if (specMatch) {
       const key = specMatch[1].trim();
       const value = specMatch[2].trim();
@@ -46,8 +54,12 @@ function parseDescription(descText: string) {
       continue;
     }
 
-    // Otherwise it's a narrative paragraph
-    paragraphs.push(line);
+    // If it was marked as a bullet, or if it is short and doesn't end with a period
+    if (isBullet || (content.length < 80 && !content.endsWith("."))) {
+      highlights.push(content);
+    } else {
+      paragraphs.push(content);
+    }
   }
 
   return { paragraphs, highlights, specs };
@@ -286,6 +298,19 @@ export default function ProductDetail() {
             </div>
 
             {product.description && (() => {
+              const isHTML = /<[a-z][\s\S]*>/i.test(product.description);
+              if (isHTML) {
+                return (
+                  <div className="space-y-4 mb-8 border-t border-border pt-6 mt-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-foreground mb-3">Product Description</h4>
+                    <div 
+                      className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground leading-relaxed [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5" 
+                      dangerouslySetInnerHTML={{ __html: product.description }} 
+                    />
+                  </div>
+                );
+              }
+
               const { paragraphs, highlights, specs } = parseDescription(product.description);
               const hasContent = paragraphs.length > 0 || highlights.length > 0 || specs.length > 0;
               if (!hasContent) {

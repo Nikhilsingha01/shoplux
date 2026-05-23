@@ -20,6 +20,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import { Pencil, Trash2, Plus, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 interface Product {
   id: number;
@@ -125,11 +126,9 @@ function ProductForm({
 
       <div className="space-y-1">
         <label className="text-sm font-medium">Description</label>
-        <textarea
-          className="w-full border border-border px-3 py-2 rounded-md text-sm focus:outline-none focus:border-primary resize-none"
-          rows={3}
+        <RichTextEditor
           value={form.description}
-          onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+          onChange={(val) => setForm((f) => ({ ...f, description: val }))}
           placeholder="Detailed product description..."
         />
       </div>
