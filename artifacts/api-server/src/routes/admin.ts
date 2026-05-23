@@ -223,7 +223,7 @@ router.post("/admin/upload", requireAdmin, upload.single("image"), async (req, r
   }
 });
 
-router.post("/uploads", requireAuth, upload.single("file"), async (req, res): Promise<void> => {
+router.post("/uploads", upload.single("file"), async (req, res): Promise<void> => {
   if (!req.file) {
     res.status(400).json({ error: "No file uploaded" });
     return;
@@ -234,6 +234,23 @@ router.post("/uploads", requireAuth, upload.single("file"), async (req, res): Pr
     res.json({ url: publicUrl });
   } catch (err: any) {
     res.status(500).json({ error: err?.message || "Failed to upload image to Supabase Storage" });
+  }
+});
+
+import fs from "fs";
+import path from "path";
+
+router.get("/admin/debug-emails", requireAdmin, async (req, res): Promise<void> => {
+  try {
+    const debugEmailPath = path.resolve(process.cwd(), "uploads", "sent-emails.json");
+    if (fs.existsSync(debugEmailPath)) {
+      const data = fs.readFileSync(debugEmailPath, "utf-8");
+      res.json(JSON.parse(data));
+    } else {
+      res.json([]);
+    }
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || "Failed to read debug emails log" });
   }
 });
 

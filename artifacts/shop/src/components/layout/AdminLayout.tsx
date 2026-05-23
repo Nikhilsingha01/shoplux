@@ -15,6 +15,7 @@ import {
   X,
   ArrowLeftRight,
   MessageCircle,
+  Mail,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ const navItems = [
   { href: "/admin/banners", label: "Banners", icon: Image },
   { href: "/admin/coupons", label: "Coupons", icon: Ticket },
   { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/emails", label: "Sent Emails", icon: Mail },
   { href: "/admin/support", label: "Support", icon: MessageCircle },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];

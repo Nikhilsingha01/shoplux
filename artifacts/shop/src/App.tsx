@@ -96,6 +96,7 @@ import AdminCoupons from "@/pages/admin/coupons";
 import AdminSettings from "@/pages/admin/settings";
 import AdminUsers from "@/pages/admin/users";
 import AdminSupport from "@/pages/admin/support";
+import AdminEmails from "@/pages/admin/emails";
 import Support from "@/pages/support";
 
 function SignInPage() {
@@ -252,6 +253,7 @@ function ClerkProviderWithRoutes() {
           <Route path="/admin/coupons" component={AdminCoupons} />
           <Route path="/admin/settings" component={AdminSettings} />
           <Route path="/admin/users" component={AdminUsers} />
+          <Route path="/admin/emails" component={AdminEmails} />
           <Route path="/admin/support" component={AdminSupport} />
           
           <Route path="/faq" component={FAQ} />

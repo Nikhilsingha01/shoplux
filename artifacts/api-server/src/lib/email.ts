@@ -1,5 +1,7 @@
 import { Resend } from "resend";
 import { logger } from "./logger";
+import fs from "fs";
+import path from "path";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -367,6 +369,37 @@ async function sendEmail(
   html: string,
   context: string
 ): Promise<void> {
+  // Log generated email locally for real-time visibility in Admin Panel
+  try {
+    const debugEmailDir = path.resolve(process.cwd(), "uploads");
+    if (!fs.existsSync(debugEmailDir)) {
+      fs.mkdirSync(debugEmailDir, { recursive: true });
+    }
+    const debugEmailPath = path.join(debugEmailDir, "sent-emails.json");
+    let list = [];
+    if (fs.existsSync(debugEmailPath)) {
+      try {
+        list = JSON.parse(fs.readFileSync(debugEmailPath, "utf-8"));
+      } catch (e) {}
+    }
+    
+    list.unshift({
+      id: Date.now() + Math.random().toString(),
+      timestamp: new Date().toISOString(),
+      to,
+      subject,
+      html,
+      context,
+      redirectedTo: FROM_ADDRESS.includes("onboarding@resend.dev") ? (process.env.SUPPORT_EMAIL || "nikhilsinghal2023@gmail.com") : null,
+      status: process.env.RESEND_API_KEY ? "triggered" : "skipped_missing_api_key"
+    });
+    
+    list = list.slice(0, 50);
+    fs.writeFileSync(debugEmailPath, JSON.stringify(list, null, 2));
+  } catch (e) {
+    logger.error({ e }, "Failed to write local debug email log");
+  }
+
   if (!process.env.RESEND_API_KEY) {
     logger.warn({ context }, "RESEND_API_KEY not set — skipping email");
     return;
@@ -375,7 +408,7 @@ async function sendEmail(
   let recipient = to;
   // Redirect unverified sandbox emails to Nikhil Singhal's registered Resend developer account email
   if (FROM_ADDRESS.includes("onboarding@resend.dev")) {
-    const devFallback = process.env.SUPPORT_EMAIL || "singhalnikhil010@gmail.com";
+    const devFallback = process.env.SUPPORT_EMAIL || "nikhilsinghal2023@gmail.com";
     logger.info(
       { originalRecipient: to, devFallback, context },
       "Resend onboarding sandbox mode detected — redirecting recipient to verified dev email"

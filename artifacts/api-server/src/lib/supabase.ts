@@ -3,6 +3,13 @@ import { logger } from "./logger";
 import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
+import { WebSocket } from "ws";
+
+// Polyfill WebSocket globally for Node.js < 22 environments to avoid Supabase Realtime errors
+if (typeof globalThis.WebSocket === "undefined") {
+  globalThis.WebSocket = WebSocket as any;
+}
+
 
 // Ensure environment variables are loaded from any possible location (.env in process.cwd(), or parent folders)
 dotenv.config();
