@@ -343,7 +343,6 @@ function orderStatusTemplate(data: OrderEmailData, storeName: string): string {
 }
 
 // ─── Send functions ────────────────────────────────────────────────────────────
-
 async function sendEmail(
   to: string,
   subject: string,
@@ -355,10 +354,21 @@ async function sendEmail(
     return;
   }
 
+  let recipient = to;
+  // Redirect unverified sandbox emails to Nikhil Singhal's registered Resend developer account email
+  if (FROM_ADDRESS.includes("onboarding@resend.dev")) {
+    const devFallback = process.env.SUPPORT_EMAIL || "singhalnikhil010@gmail.com";
+    logger.info(
+      { originalRecipient: to, devFallback, context },
+      "Resend onboarding sandbox mode detected — redirecting recipient to verified dev email"
+    );
+    recipient = devFallback;
+  }
+
   try {
     const { data, error } = await resend.emails.send({
       from: FROM_ADDRESS,
-      to,
+      to: recipient,
       subject,
       html,
     });
@@ -366,7 +376,7 @@ async function sendEmail(
     if (error) {
       logger.error({ context, error }, "Email send failed");
     } else {
-      logger.info({ context, emailId: data?.id, to }, "Email sent");
+      logger.info({ context, emailId: data?.id, to: recipient }, "Email sent");
     }
   } catch (err) {
     logger.error({ context, err }, "Email send threw unexpectedly");

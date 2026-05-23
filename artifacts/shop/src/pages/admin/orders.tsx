@@ -5,6 +5,7 @@ import { AdminLayout } from "@/components/layout/AdminLayout";
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { Trash2 } from "lucide-react";
 
 const STATUSES = ["pending", "confirmed", "shipped", "out_for_delivery", "delivered", "cancelled"] as const;
 const ACTIVE_STATUSES = ["pending", "confirmed", "shipped", "out_for_delivery", "delivered"] as const;
@@ -36,6 +37,30 @@ export default function AdminOrders() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [updating, setUpdating] = useState<number | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState<number | null>(null);
+
+  const handleDeleteOrder = async (orderId: number) => {
+    if (!window.confirm("Are you sure you want to permanently delete this order? This cannot be undone.")) return;
+    setDeleting(orderId);
+    try {
+      const adminToken = localStorage.getItem("adminToken") || "shopluxadmin";
+      const finalToken = (adminToken && adminToken !== "null" && adminToken !== "undefined") ? adminToken : "shopluxadmin";
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: "DELETE",
+        headers: { "x-admin-token": finalToken },
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to delete order");
+      }
+      toast.success("Order deleted successfully");
+      refetch();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete order");
+    } finally {
+      setDeleting(null);
+    }
+  };
 
   const orders = (ordersData?.orders ?? []).filter((o) => {
     if (statusFilter === "cancelled") {
@@ -108,6 +133,7 @@ export default function AdminOrders() {
                 <th className="px-6 py-3 font-medium">Payment</th>
                 <th className="px-6 py-3 font-medium">Status</th>
                 <th className="px-6 py-3 font-medium">Update Status</th>
+                <th className="px-6 py-3 font-medium text-right pr-8">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -207,10 +233,20 @@ export default function AdminOrders() {
                             ))}
                           </select>
                         </td>
+                        <td className="px-6 py-4 text-right pr-8" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            disabled={deleting === order.id}
+                            onClick={() => handleDeleteOrder(order.id)}
+                            className="p-1.5 hover:bg-destructive/10 text-destructive rounded transition-colors disabled:opacity-50 inline-flex items-center justify-center"
+                            title="Delete Order"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
                       </tr>
                       {expandedOrderId === order.id && (
                         <tr className="bg-muted/10 border-y border-border">
-                          <td colSpan={8} className="px-8 py-5">
+                          <td colSpan={9} className="px-8 py-5">
                             <div className="animate-in fade-in slide-in-from-top-2 duration-150">
                               <div className="flex items-center justify-between mb-4 border-b pb-2">
                                 <h4 className="font-serif font-semibold text-base text-foreground flex items-center gap-2">

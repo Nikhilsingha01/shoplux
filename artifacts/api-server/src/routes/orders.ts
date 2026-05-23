@@ -88,11 +88,17 @@ async function buildOrderResponse(order: typeof ordersTable.$inferSelect) {
     .from(returnsTable)
     .where(eq(returnsTable.orderId, order.id));
 
-  // Compute customer-relative order number
-  const countResult = await db.execute(
-    sql`SELECT COUNT(*) as cnt FROM orders WHERE user_id = ${order.userId} AND created_at <= ${order.createdAt}`
-  );
-  const customerOrderNumber = Number((countResult.rows[0] as any)?.cnt ?? 1);
+  // Compute customer-relative order number using Drizzle query builder for reliable timezone and parameter mapping
+  const [countResult] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(ordersTable)
+    .where(
+      and(
+        eq(ordersTable.userId, order.userId),
+        sql`${ordersTable.createdAt} <= ${order.createdAt}`
+      )
+    );
+  const customerOrderNumber = Number(countResult?.count ?? 1);
 
   const itemsWithReturnStatus = items.map((i) => {
     const ret = itemReturns.find((r) => r.orderItemId === i.id);
@@ -510,6 +516,31 @@ router.patch("/orders/:id/status", requireAdmin, async (req, res): Promise<void>
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+  const [originalOrder] = await db
+    .select()
+    .from(ordersTable)
+    .where(eq(ordersTable.id, params.data.id))
+    .limit(1);
+
+  if (!originalOrder) {
+    res.status(404).json({ error: "Order not found" });
+    return;
+  }
+
+  // Restore stock if transitioning to cancelled status
+  if (originalOrder.status !== "cancelled" && parsed.data.status === "cancelled") {
+    const orderItems = await db.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, originalOrder.id));
+    for (const item of orderItems) {
+      if (item.productId) {
+        const [product] = await db.select().from(productsTable).where(eq(productsTable.id, item.productId)).limit(1);
+        if (product && product.stock !== null && product.stock !== undefined) {
+          await db.update(productsTable)
+            .set({ stock: product.stock + item.quantity })
+            .where(eq(productsTable.id, product.id));
+        }
+      }
+    }
+  }
 
   const updateData: Record<string, unknown> = { status: parsed.data.status };
   if (parsed.data.razorpayPaymentId) {
@@ -521,13 +552,8 @@ router.patch("/orders/:id/status", requireAdmin, async (req, res): Promise<void>
   const [order] = await db
     .update(ordersTable)
     .set(updateData)
-    .where(eq(ordersTable.id, params.data.id))
+    .where(eq(ordersTable.id, originalOrder.id))
     .returning();
-
-  if (!order) {
-    res.status(404).json({ error: "Order not found" });
-    return;
-  }
 
   const [settings] = await db.select().from(adminSettingsTable).limit(1);
   const storeName = settings?.storeName ?? "ShopLux";
@@ -541,6 +567,40 @@ router.patch("/orders/:id/status", requireAdmin, async (req, res): Promise<void>
     sendOrderStatusEmail(emailData).catch((e) =>
       logger.error({ e, status: parsed.data.status }, "status_change email failed")
     );
+  }
+});
+
+// ─── DELETE /orders/:id — admin delete order ───────────────────────────────────
+
+router.delete("/orders/:id", requireAdmin, async (req, res): Promise<void> => {
+  const orderId = parseInt(req.params.id as string, 10);
+  if (isNaN(orderId)) {
+    res.status(400).json({ error: "Invalid order ID" });
+    return;
+  }
+
+  // Check if order exists
+  const [order] = await db.select().from(ordersTable).where(eq(ordersTable.id, orderId)).limit(1);
+  if (!order) {
+    res.status(404).json({ error: "Order not found" });
+    return;
+  }
+
+  try {
+    // Perform cascaded deletion in a transaction to satisfy foreign key constraints
+    await db.transaction(async (tx) => {
+      // 1. Delete associated returns
+      await tx.delete(returnsTable).where(eq(returnsTable.orderId, orderId));
+      // 2. Delete associated order items
+      await tx.delete(orderItemsTable).where(eq(orderItemsTable.orderId, orderId));
+      // 3. Delete the order itself
+      await tx.delete(ordersTable).where(eq(ordersTable.id, orderId));
+    });
+
+    res.json({ success: true, message: "Order deleted successfully" });
+  } catch (err: any) {
+    logger.error({ err, orderId }, "Order deletion failed");
+    res.status(500).json({ error: "Failed to delete order" });
   }
 });
 
