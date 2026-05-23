@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { logger } from "./logger";
 import dotenv from "dotenv";
 import path from "path";
+import fs from "fs";
 
 // Ensure environment variables are loaded from any possible location (.env in process.cwd(), or parent folders)
 dotenv.config();
@@ -117,12 +118,21 @@ export async function uploadToSupabase(
   mimeType: string
 ): Promise<string> {
   ensureSupabaseInitialized();
+  const ext = originalName.split(".").pop() || "png";
   if (!supabase) {
-    throw new Error("Supabase client is not configured. Set SUPABASE_SERVICE_ROLE_KEY in .env");
+    logger.info("Supabase client not configured — falling back to local file system upload");
+    const uploadsDir = path.resolve(process.cwd(), "uploads");
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    const localFileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
+    const localFilePath = path.join(uploadsDir, localFileName);
+    fs.writeFileSync(localFilePath, buffer);
+    logger.info({ localFilePath }, "Local file system upload successful");
+    return `/uploads/${localFileName}`;
   }
 
   // Create a unique file name under the uploads folder to avoid collisions
-  const ext = originalName.split(".").pop() || "png";
   const uniqueName = `uploads/${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
   const bucketName = process.env.SUPABASE_BUCKET || "shoplux-assets";
 
@@ -185,9 +195,12 @@ export function resolveImageUrl(imgPath: string | null | undefined): string | nu
   ensureSupabaseInitialized();
   const cleanPath = imgPath.replace(/^\/?(api\/)?uploads\//, "");
   const bucketName = process.env.SUPABASE_BUCKET || "shoplux-assets";
-  if (supabaseUrl) {
+  if (supabaseUrl && supabase) {
     return `${supabaseUrl}/storage/v1/object/public/${bucketName}/uploads/${cleanPath}`;
   }
-  return imgPath;
+  if (imgPath.startsWith("/uploads/")) {
+    return imgPath;
+  }
+  return imgPath.startsWith("/") ? imgPath : `/${imgPath}`;
 }
 

@@ -297,6 +297,24 @@ function orderStatusTemplate(data: OrderEmailData, storeName: string): string {
       color: "#c0392b",
       icon: "✕",
     },
+    return_pending: {
+      title: "Return Requested",
+      message: "We have received your return request for this order. Our team is currently reviewing the details and photos submitted. We will notify you once it's approved or rejected.",
+      color: "#e07b00",
+      icon: "🔄",
+    },
+    return_approved: {
+      title: "Return Approved",
+      message: "Great news! Your return request has been approved. The refund has been initiated to your provided bank account and will reflect within 3–5 business days.",
+      color: "#2d7a4f",
+      icon: "✓",
+    },
+    return_rejected: {
+      title: "Return Rejected",
+      message: "We have reviewed your return request, and unfortunately, it has been rejected because it does not meet our return policy guidelines.",
+      color: "#c0392b",
+      icon: "✕",
+    },
   };
 
   const cfg = statusConfig[data.status] ?? {
@@ -420,6 +438,9 @@ export async function sendOrderStatusEmail(data: OrderEmailData): Promise<void> 
     out_for_delivery: `Order #${orderDisplayId} is out for delivery`,
     delivered: `Order #${orderDisplayId} delivered — enjoy your purchase!`,
     cancelled: `Order #${orderDisplayId} has been cancelled`,
+    return_pending: `Return requested for order #${orderDisplayId}`,
+    return_approved: `Return approved — Refund initiated for order #${orderDisplayId}`,
+    return_rejected: `Return request update for order #${orderDisplayId}`,
   };
 
   const subject = subjectMap[data.status] ?? `Update on Order #${orderDisplayId}`;

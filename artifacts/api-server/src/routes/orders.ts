@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { eq, desc, sql, and } from "drizzle-orm";
 import crypto from "crypto";
+import { clerkClient } from "@clerk/express";
 import {
   db,
   ordersTable,
@@ -109,12 +110,12 @@ async function buildOrderResponse(order: typeof ordersTable.$inferSelect) {
       returnStatus: ret ? ret.status : null,
       returnReason: ret ? ret.reason : null,
       returnId: ret ? ret.id : null,
-      returnImageUrl: ret ? (ret as any).image_url ?? null : null,
+      returnImageUrl: ret ? resolveImageUrl(ret.imageUrl) : null,
       returnBankDetails: ret ? {
-        bankName: (ret as any).bank_name,
-        accountNumber: (ret as any).account_number,
-        ifscCode: (ret as any).ifsc_code,
-        accountHolder: (ret as any).account_holder,
+        bankName: ret.bankName,
+        accountNumber: ret.accountNumber,
+        ifscCode: ret.ifscCode,
+        accountHolder: ret.accountHolder,
       } : null,
     };
   });
@@ -138,13 +139,38 @@ async function buildEmailData(
   fullOrder: Awaited<ReturnType<typeof buildOrderResponse>>,
   storeName: string
 ): Promise<OrderEmailData | null> {
-  const email = fullOrder.customerEmail;
-  if (!email) return null;
+  let email = fullOrder.customerEmail;
+  let name = fullOrder.customerName ?? "Valued Customer";
+  let phone = fullOrder.customerPhone;
+
+  if (email && email.startsWith("user_")) {
+    try {
+      const clerkUser = await clerkClient.users.getUser(email);
+      const realEmail = clerkUser.emailAddresses[0]?.emailAddress;
+      const realName = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ");
+      const realPhone = clerkUser.phoneNumbers[0]?.phoneNumber;
+      
+      if (realEmail) {
+        email = realEmail;
+        name = realName || name;
+        phone = realPhone || phone;
+        
+        // Proactively update the database so this order has clean details going forward!
+        await db.update(ordersTable)
+          .set({ customerEmail: realEmail, customerName: realName || null, customerPhone: realPhone || null })
+          .where(eq(ordersTable.id, fullOrder.id));
+      }
+    } catch (err) {
+      logger.error({ err, orderId: fullOrder.id }, "Failed to resolve customer Clerk email during email data build");
+    }
+  }
+
+  if (!email || email.startsWith("user_")) return null;
 
   return {
     orderId: fullOrder.id,
     customerOrderNumber: fullOrder.customerOrderNumber,
-    customerName: fullOrder.customerName ?? "Valued Customer",
+    customerName: name,
     customerEmail: email,
     status: fullOrder.status,
     paymentMethod: fullOrder.paymentMethod,
@@ -926,7 +952,7 @@ router.post("/orders/:id/items/:itemId/return", requireAuth, async (req, res): P
       return;
     }
 
-    // 4. Create return request with extra details
+    // 4. Create return request with details
     const [newReturn] = await db
       .insert(returnsTable)
       .values({
@@ -935,24 +961,28 @@ router.post("/orders/:id/items/:itemId/return", requireAuth, async (req, res): P
         orderItemId: itemId,
         userId,
         reason,
+        imageUrl: imageUrl || null,
+        bankName: bankName || null,
+        accountNumber: accountNumber || null,
+        ifscCode: ifscCode || null,
+        accountHolder: accountHolderName || null,
         status: "pending",
       })
       .returning();
 
-    // 5. Update extra fields using raw SQL (since schema might not have them yet)
-    if (imageUrl || bankName || accountNumber || ifscCode || accountHolderName) {
-      await db.execute(sql`
-        UPDATE returns SET
-          image_url = ${imageUrl ?? null},
-          bank_name = ${bankName ?? null},
-          account_number = ${accountNumber ?? null},
-          ifsc_code = ${ifscCode ?? null},
-          account_holder = ${accountHolderName ?? null}
-        WHERE id = ${newReturn.id}
-      `);
-    }
-
     res.status(201).json(newReturn);
+
+    // Send return request confirmation email asynchronously
+    const [settings] = await db.select().from(adminSettingsTable).limit(1);
+    const storeName = settings?.storeName ?? "ShopLux";
+    const fullOrder = await buildOrderResponse(order);
+    const emailData = await buildEmailData(fullOrder, storeName);
+    if (emailData) {
+      sendOrderStatusEmail({
+        ...emailData,
+        status: "return_pending",
+      }).catch((e) => logger.error({ e }, "Return request email failed"));
+    }
   } catch (error: any) {
     console.error("Error creating return request:", error);
     res.status(500).json({ error: error.message });
@@ -994,11 +1024,11 @@ router.get("/admin/returns", requireAdmin, async (req, res): Promise<void> => {
 
         return {
           ...ret,
-          imageUrl: resolveImageUrl((ret as any).image_url),
-          bankName: (ret as any).bank_name ?? null,
-          accountNumber: (ret as any).account_number ?? null,
-          ifscCode: (ret as any).ifsc_code ?? null,
-          accountHolder: (ret as any).account_holder ?? null,
+          imageUrl: resolveImageUrl(ret.imageUrl),
+          bankName: ret.bankName ?? null,
+          accountNumber: ret.accountNumber ?? null,
+          ifscCode: ret.ifscCode ?? null,
+          accountHolder: ret.accountHolder ?? null,
           order: order ? {
             ...order,
             totalAmount: Number(order.totalAmount),
@@ -1073,6 +1103,25 @@ router.patch("/admin/returns/:id/status", requireAdmin, async (req, res): Promis
       .returning();
 
     res.json(updatedReturn);
+
+    // Send return resolution email asynchronously
+    try {
+      const [order] = await db.select().from(ordersTable).where(eq(ordersTable.id, ret.orderId)).limit(1);
+      if (order) {
+        const [settings] = await db.select().from(adminSettingsTable).limit(1);
+        const storeName = settings?.storeName ?? "ShopLux";
+        const fullOrder = await buildOrderResponse(order);
+        const emailData = await buildEmailData(fullOrder, storeName);
+        if (emailData) {
+          sendOrderStatusEmail({
+            ...emailData,
+            status: status === "approved" ? "return_approved" : "return_rejected",
+          }).catch((e) => logger.error({ e }, "Return resolution email failed"));
+        }
+      }
+    } catch (e) {
+      logger.error({ e }, "Failed to dispatch return resolution email");
+    }
   } catch (error: any) {
     console.error("Error updating return request status:", error);
     res.status(500).json({ error: error.message });
