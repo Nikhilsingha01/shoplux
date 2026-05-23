@@ -413,6 +413,7 @@ export const ListOrdersQueryParams = zod.object({
 export const ListOrdersResponse = zod.object({
   "orders": zod.array(zod.object({
   "id": zod.number(),
+  "customerOrderNumber": zod.number().optional(),
   "userId": zod.string(),
   "status": zod.string(),
   "paymentMethod": zod.string(),
@@ -431,7 +432,17 @@ export const ListOrdersResponse = zod.object({
   "productImage": zod.string().nullish(),
   "price": zod.number(),
   "quantity": zod.number(),
-  "variant": zod.string().nullish()
+  "variant": zod.string().nullish(),
+  "returnStatus": zod.string().nullish(),
+  "returnReason": zod.string().nullish(),
+  "returnId": zod.number().nullish(),
+  "returnImageUrl": zod.string().nullish(),
+  "returnBankDetails": zod.object({
+  "bankName": zod.string().nullish(),
+  "accountNumber": zod.string().nullish(),
+  "ifscCode": zod.string().nullish(),
+  "accountHolder": zod.string().nullish()
+}).optional()
 })),
   "address": zod.object({
   "id": zod.number(),
@@ -487,6 +498,7 @@ export const GetOrderParams = zod.object({
 
 export const GetOrderResponse = zod.object({
   "id": zod.number(),
+  "customerOrderNumber": zod.number().optional(),
   "userId": zod.string(),
   "status": zod.string(),
   "paymentMethod": zod.string(),
@@ -505,7 +517,17 @@ export const GetOrderResponse = zod.object({
   "productImage": zod.string().nullish(),
   "price": zod.number(),
   "quantity": zod.number(),
-  "variant": zod.string().nullish()
+  "variant": zod.string().nullish(),
+  "returnStatus": zod.string().nullish(),
+  "returnReason": zod.string().nullish(),
+  "returnId": zod.number().nullish(),
+  "returnImageUrl": zod.string().nullish(),
+  "returnBankDetails": zod.object({
+  "bankName": zod.string().nullish(),
+  "accountNumber": zod.string().nullish(),
+  "ifscCode": zod.string().nullish(),
+  "accountHolder": zod.string().nullish()
+}).optional()
 })),
   "address": zod.object({
   "id": zod.number(),
@@ -541,6 +563,7 @@ export const UpdateOrderStatusBody = zod.object({
 
 export const UpdateOrderStatusResponse = zod.object({
   "id": zod.number(),
+  "customerOrderNumber": zod.number().optional(),
   "userId": zod.string(),
   "status": zod.string(),
   "paymentMethod": zod.string(),
@@ -559,7 +582,17 @@ export const UpdateOrderStatusResponse = zod.object({
   "productImage": zod.string().nullish(),
   "price": zod.number(),
   "quantity": zod.number(),
-  "variant": zod.string().nullish()
+  "variant": zod.string().nullish(),
+  "returnStatus": zod.string().nullish(),
+  "returnReason": zod.string().nullish(),
+  "returnId": zod.number().nullish(),
+  "returnImageUrl": zod.string().nullish(),
+  "returnBankDetails": zod.object({
+  "bankName": zod.string().nullish(),
+  "accountNumber": zod.string().nullish(),
+  "ifscCode": zod.string().nullish(),
+  "accountHolder": zod.string().nullish()
+}).optional()
 })),
   "address": zod.object({
   "id": zod.number(),
@@ -719,6 +752,8 @@ export const GetWishlistResponseItem = zod.object({
   "isBestSeller": zod.boolean().optional(),
   "rating": zod.number().nullish(),
   "reviewCount": zod.number().optional(),
+  "deliveryCharge": zod.number().nullish(),
+  "isDeliveryChargeApplicable": zod.boolean().nullish(),
   "createdAt": zod.string()
 })
 })
@@ -852,6 +887,7 @@ export const GetAdminStatsResponse = zod.object({
   "pendingOrders": zod.number().optional(),
   "recentOrders": zod.array(zod.object({
   "id": zod.number(),
+  "customerOrderNumber": zod.number().optional(),
   "userId": zod.string(),
   "status": zod.string(),
   "paymentMethod": zod.string(),
@@ -870,7 +906,17 @@ export const GetAdminStatsResponse = zod.object({
   "productImage": zod.string().nullish(),
   "price": zod.number(),
   "quantity": zod.number(),
-  "variant": zod.string().nullish()
+  "variant": zod.string().nullish(),
+  "returnStatus": zod.string().nullish(),
+  "returnReason": zod.string().nullish(),
+  "returnId": zod.number().nullish(),
+  "returnImageUrl": zod.string().nullish(),
+  "returnBankDetails": zod.object({
+  "bankName": zod.string().nullish(),
+  "accountNumber": zod.string().nullish(),
+  "ifscCode": zod.string().nullish(),
+  "accountHolder": zod.string().nullish()
+}).optional()
 })),
   "address": zod.object({
   "id": zod.number(),
@@ -897,7 +943,12 @@ export const GetAdminStatsResponse = zod.object({
   "revenueByDay": zod.array(zod.object({
   "date": zod.string(),
   "revenue": zod.number()
-}))
+})),
+  "monthlySales": zod.array(zod.object({
+  "month": zod.string(),
+  "orders": zod.number(),
+  "revenue": zod.number()
+})).optional()
 })
 
 

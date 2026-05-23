@@ -5,6 +5,7 @@
  * Ecommerce API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { OrderItemReturnBankDetails } from './orderItemReturnBankDetails';
 
 export interface OrderItem {
   id: number;
@@ -16,4 +17,13 @@ export interface OrderItem {
   quantity: number;
   /** @nullable */
   variant?: string | null;
+  /** @nullable */
+  returnStatus?: string | null;
+  /** @nullable */
+  returnReason?: string | null;
+  /** @nullable */
+  returnId?: number | null;
+  /** @nullable */
+  returnImageUrl?: string | null;
+  returnBankDetails?: OrderItemReturnBankDetails;
 }

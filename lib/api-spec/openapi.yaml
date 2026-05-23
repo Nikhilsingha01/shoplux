@@ -1014,6 +1014,25 @@ components:
           type: integer
         variant:
           type: ["string", "null"]
+        returnStatus:
+          type: ["string", "null"]
+        returnReason:
+          type: ["string", "null"]
+        returnId:
+          type: ["integer", "null"]
+        returnImageUrl:
+          type: ["string", "null"]
+        returnBankDetails:
+          type: object
+          properties:
+            bankName:
+              type: ["string", "null"]
+            accountNumber:
+              type: ["string", "null"]
+            ifscCode:
+              type: ["string", "null"]
+            accountHolder:
+              type: ["string", "null"]
 
     OrderItemInput:
       type: object
@@ -1033,6 +1052,8 @@ components:
       required: [id, userId, status, paymentMethod, totalAmount, items, createdAt]
       properties:
         id:
+          type: integer
+        customerOrderNumber:
           type: integer
         userId:
           type: string
@@ -1381,6 +1402,18 @@ components:
             properties:
               date:
                 type: string
+              revenue:
+                type: number
+        monthlySales:
+          type: array
+          items:
+            type: object
+            required: [month, orders, revenue]
+            properties:
+              month:
+                type: string
+              orders:
+                type: integer
               revenue:
                 type: number
 

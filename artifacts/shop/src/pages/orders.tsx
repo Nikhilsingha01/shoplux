@@ -38,7 +38,7 @@ export default function OrdersList() {
                 <div key={order.id} className="border bg-background p-6 rounded-sm shadow-sm">
                   <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4 border-b pb-4 gap-4">
                     <div>
-                      <p className="font-semibold text-lg font-serif">Order #{order.id}</p>
+                      <p className="font-semibold text-lg font-serif">Order #{order.customerOrderNumber ?? order.id}</p>
                       <p className="text-sm text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()}</p>
                     </div>
                     <div className="flex flex-col sm:items-end gap-2">

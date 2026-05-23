@@ -1,10 +1,8 @@
 import type { QueryKey, UseMutationOptions, UseMutationResult, UseQueryOptions, UseQueryResult } from '@tanstack/react-query';
 import type { Address, AddressInput, AddressUpdate, AdminSettings, AdminSettingsUpdate, AdminStats, Banner, BannerInput, BannerUpdate, Category, CategoryInput, CategoryUpdate, Coupon, CouponInput, CouponUpdate, CouponValidateInput, HealthStatus, HomepageProducts, ListOrdersParams, ListProductsParams, ListUsersParams, Order, OrderInput, OrderListResponse, OrderStatusUpdate, PaymentOrder, PaymentOrderInput, PaymentVerification, PaymentVerificationResult, Product, ProductInput, ProductListResponse, ProductUpdate, UserListResponse, WishlistInput, WishlistItem } from './api.schemas';
-import { customFetch } from '../custom-fetch';
 import type { ErrorType, BodyType } from '../custom-fetch';
 type AwaitedInput<T> = PromiseLike<T> | T;
 type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 export declare const getHealthCheckUrl: () => string;
 /**
  * Returns server health status
@@ -14,7 +12,6 @@ export declare const healthCheck: (options?: RequestInit) => Promise<HealthStatu
 export declare const getHealthCheckQueryKey: () => readonly ["/api/healthz"];
 export declare const getHealthCheckQueryOptions: <TData = Awaited<ReturnType<typeof healthCheck>>, TError = ErrorType<unknown>>(options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData> & {
     queryKey: QueryKey;
 };
@@ -25,7 +22,6 @@ export type HealthCheckQueryError = ErrorType<unknown>;
  */
 export declare function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, TError = ErrorType<unknown>>(options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
 };
@@ -37,7 +33,6 @@ export declare const listProducts: (params?: ListProductsParams, options?: Reque
 export declare const getListProductsQueryKey: (params?: ListProductsParams) => readonly ["/api/products", ...ListProductsParams[]];
 export declare const getListProductsQueryOptions: <TData = Awaited<ReturnType<typeof listProducts>>, TError = ErrorType<unknown>>(params?: ListProductsParams, options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof listProducts>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseQueryOptions<Awaited<ReturnType<typeof listProducts>>, TError, TData> & {
     queryKey: QueryKey;
 };
@@ -48,7 +43,6 @@ export type ListProductsQueryError = ErrorType<unknown>;
  */
 export declare function useListProducts<TData = Awaited<ReturnType<typeof listProducts>>, TError = ErrorType<unknown>>(params?: ListProductsParams, options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof listProducts>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
 };
@@ -61,7 +55,6 @@ export declare const getCreateProductMutationOptions: <TError = ErrorType<unknow
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof createProduct>>, TError, {
         data: BodyType<ProductInput>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof createProduct>>, TError, {
     data: BodyType<ProductInput>;
 }, TContext>;
@@ -75,7 +68,6 @@ export declare const useCreateProduct: <TError = ErrorType<unknown>, TContext = 
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof createProduct>>, TError, {
         data: BodyType<ProductInput>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof createProduct>>, TError, {
     data: BodyType<ProductInput>;
 }, TContext>;
@@ -87,7 +79,6 @@ export declare const listFeaturedProducts: (options?: RequestInit) => Promise<Ho
 export declare const getListFeaturedProductsQueryKey: () => readonly ["/api/products/featured"];
 export declare const getListFeaturedProductsQueryOptions: <TData = Awaited<ReturnType<typeof listFeaturedProducts>>, TError = ErrorType<unknown>>(options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof listFeaturedProducts>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseQueryOptions<Awaited<ReturnType<typeof listFeaturedProducts>>, TError, TData> & {
     queryKey: QueryKey;
 };
@@ -98,7 +89,6 @@ export type ListFeaturedProductsQueryError = ErrorType<unknown>;
  */
 export declare function useListFeaturedProducts<TData = Awaited<ReturnType<typeof listFeaturedProducts>>, TError = ErrorType<unknown>>(options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof listFeaturedProducts>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
 };
@@ -110,7 +100,6 @@ export declare const getProduct: (id: number, options?: RequestInit) => Promise<
 export declare const getGetProductQueryKey: (id: number) => readonly [`/api/products/${number}`];
 export declare const getGetProductQueryOptions: <TData = Awaited<ReturnType<typeof getProduct>>, TError = ErrorType<void>>(id: number, options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof getProduct>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseQueryOptions<Awaited<ReturnType<typeof getProduct>>, TError, TData> & {
     queryKey: QueryKey;
 };
@@ -121,7 +110,6 @@ export type GetProductQueryError = ErrorType<void>;
  */
 export declare function useGetProduct<TData = Awaited<ReturnType<typeof getProduct>>, TError = ErrorType<void>>(id: number, options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof getProduct>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
 };
@@ -135,7 +123,6 @@ export declare const getUpdateProductMutationOptions: <TError = ErrorType<unknow
         id: number;
         data: BodyType<ProductUpdate>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof updateProduct>>, TError, {
     id: number;
     data: BodyType<ProductUpdate>;
@@ -151,7 +138,6 @@ export declare const useUpdateProduct: <TError = ErrorType<unknown>, TContext = 
         id: number;
         data: BodyType<ProductUpdate>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof updateProduct>>, TError, {
     id: number;
     data: BodyType<ProductUpdate>;
@@ -165,7 +151,6 @@ export declare const getDeleteProductMutationOptions: <TError = ErrorType<unknow
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteProduct>>, TError, {
         id: number;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof deleteProduct>>, TError, {
     id: number;
 }, TContext>;
@@ -178,7 +163,6 @@ export declare const useDeleteProduct: <TError = ErrorType<unknown>, TContext = 
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteProduct>>, TError, {
         id: number;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof deleteProduct>>, TError, {
     id: number;
 }, TContext>;
@@ -190,7 +174,6 @@ export declare const listCategories: (options?: RequestInit) => Promise<Category
 export declare const getListCategoriesQueryKey: () => readonly ["/api/categories"];
 export declare const getListCategoriesQueryOptions: <TData = Awaited<ReturnType<typeof listCategories>>, TError = ErrorType<unknown>>(options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof listCategories>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseQueryOptions<Awaited<ReturnType<typeof listCategories>>, TError, TData> & {
     queryKey: QueryKey;
 };
@@ -201,7 +184,6 @@ export type ListCategoriesQueryError = ErrorType<unknown>;
  */
 export declare function useListCategories<TData = Awaited<ReturnType<typeof listCategories>>, TError = ErrorType<unknown>>(options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof listCategories>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
 };
@@ -214,7 +196,6 @@ export declare const getCreateCategoryMutationOptions: <TError = ErrorType<unkno
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof createCategory>>, TError, {
         data: BodyType<CategoryInput>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof createCategory>>, TError, {
     data: BodyType<CategoryInput>;
 }, TContext>;
@@ -228,7 +209,6 @@ export declare const useCreateCategory: <TError = ErrorType<unknown>, TContext =
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof createCategory>>, TError, {
         data: BodyType<CategoryInput>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof createCategory>>, TError, {
     data: BodyType<CategoryInput>;
 }, TContext>;
@@ -242,7 +222,6 @@ export declare const getUpdateCategoryMutationOptions: <TError = ErrorType<unkno
         id: number;
         data: BodyType<CategoryUpdate>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof updateCategory>>, TError, {
     id: number;
     data: BodyType<CategoryUpdate>;
@@ -258,7 +237,6 @@ export declare const useUpdateCategory: <TError = ErrorType<unknown>, TContext =
         id: number;
         data: BodyType<CategoryUpdate>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof updateCategory>>, TError, {
     id: number;
     data: BodyType<CategoryUpdate>;
@@ -272,7 +250,6 @@ export declare const getDeleteCategoryMutationOptions: <TError = ErrorType<unkno
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteCategory>>, TError, {
         id: number;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof deleteCategory>>, TError, {
     id: number;
 }, TContext>;
@@ -285,7 +262,6 @@ export declare const useDeleteCategory: <TError = ErrorType<unknown>, TContext =
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteCategory>>, TError, {
         id: number;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof deleteCategory>>, TError, {
     id: number;
 }, TContext>;
@@ -297,7 +273,6 @@ export declare const listBanners: (options?: RequestInit) => Promise<Banner[]>;
 export declare const getListBannersQueryKey: () => readonly ["/api/banners"];
 export declare const getListBannersQueryOptions: <TData = Awaited<ReturnType<typeof listBanners>>, TError = ErrorType<unknown>>(options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof listBanners>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseQueryOptions<Awaited<ReturnType<typeof listBanners>>, TError, TData> & {
     queryKey: QueryKey;
 };
@@ -308,7 +283,6 @@ export type ListBannersQueryError = ErrorType<unknown>;
  */
 export declare function useListBanners<TData = Awaited<ReturnType<typeof listBanners>>, TError = ErrorType<unknown>>(options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof listBanners>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
 };
@@ -321,7 +295,6 @@ export declare const getCreateBannerMutationOptions: <TError = ErrorType<unknown
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof createBanner>>, TError, {
         data: BodyType<BannerInput>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof createBanner>>, TError, {
     data: BodyType<BannerInput>;
 }, TContext>;
@@ -335,7 +308,6 @@ export declare const useCreateBanner: <TError = ErrorType<unknown>, TContext = u
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof createBanner>>, TError, {
         data: BodyType<BannerInput>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof createBanner>>, TError, {
     data: BodyType<BannerInput>;
 }, TContext>;
@@ -349,7 +321,6 @@ export declare const getUpdateBannerMutationOptions: <TError = ErrorType<unknown
         id: number;
         data: BodyType<BannerUpdate>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof updateBanner>>, TError, {
     id: number;
     data: BodyType<BannerUpdate>;
@@ -365,7 +336,6 @@ export declare const useUpdateBanner: <TError = ErrorType<unknown>, TContext = u
         id: number;
         data: BodyType<BannerUpdate>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof updateBanner>>, TError, {
     id: number;
     data: BodyType<BannerUpdate>;
@@ -379,7 +349,6 @@ export declare const getDeleteBannerMutationOptions: <TError = ErrorType<unknown
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteBanner>>, TError, {
         id: number;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof deleteBanner>>, TError, {
     id: number;
 }, TContext>;
@@ -392,7 +361,6 @@ export declare const useDeleteBanner: <TError = ErrorType<unknown>, TContext = u
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteBanner>>, TError, {
         id: number;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof deleteBanner>>, TError, {
     id: number;
 }, TContext>;
@@ -404,7 +372,6 @@ export declare const listOrders: (params?: ListOrdersParams, options?: RequestIn
 export declare const getListOrdersQueryKey: (params?: ListOrdersParams) => readonly ["/api/orders", ...ListOrdersParams[]];
 export declare const getListOrdersQueryOptions: <TData = Awaited<ReturnType<typeof listOrders>>, TError = ErrorType<unknown>>(params?: ListOrdersParams, options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof listOrders>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseQueryOptions<Awaited<ReturnType<typeof listOrders>>, TError, TData> & {
     queryKey: QueryKey;
 };
@@ -415,7 +382,6 @@ export type ListOrdersQueryError = ErrorType<unknown>;
  */
 export declare function useListOrders<TData = Awaited<ReturnType<typeof listOrders>>, TError = ErrorType<unknown>>(params?: ListOrdersParams, options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof listOrders>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
 };
@@ -428,7 +394,6 @@ export declare const getCreateOrderMutationOptions: <TError = ErrorType<unknown>
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof createOrder>>, TError, {
         data: BodyType<OrderInput>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof createOrder>>, TError, {
     data: BodyType<OrderInput>;
 }, TContext>;
@@ -442,7 +407,6 @@ export declare const useCreateOrder: <TError = ErrorType<unknown>, TContext = un
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof createOrder>>, TError, {
         data: BodyType<OrderInput>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof createOrder>>, TError, {
     data: BodyType<OrderInput>;
 }, TContext>;
@@ -454,7 +418,6 @@ export declare const getOrder: (id: number, options?: RequestInit) => Promise<Or
 export declare const getGetOrderQueryKey: (id: number) => readonly [`/api/orders/${number}`];
 export declare const getGetOrderQueryOptions: <TData = Awaited<ReturnType<typeof getOrder>>, TError = ErrorType<void>>(id: number, options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof getOrder>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseQueryOptions<Awaited<ReturnType<typeof getOrder>>, TError, TData> & {
     queryKey: QueryKey;
 };
@@ -465,7 +428,6 @@ export type GetOrderQueryError = ErrorType<void>;
  */
 export declare function useGetOrder<TData = Awaited<ReturnType<typeof getOrder>>, TError = ErrorType<void>>(id: number, options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof getOrder>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
 };
@@ -479,7 +441,6 @@ export declare const getUpdateOrderStatusMutationOptions: <TError = ErrorType<un
         id: number;
         data: BodyType<OrderStatusUpdate>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof updateOrderStatus>>, TError, {
     id: number;
     data: BodyType<OrderStatusUpdate>;
@@ -495,7 +456,6 @@ export declare const useUpdateOrderStatus: <TError = ErrorType<unknown>, TContex
         id: number;
         data: BodyType<OrderStatusUpdate>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof updateOrderStatus>>, TError, {
     id: number;
     data: BodyType<OrderStatusUpdate>;
@@ -509,7 +469,6 @@ export declare const getCreatePaymentOrderMutationOptions: <TError = ErrorType<u
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof createPaymentOrder>>, TError, {
         data: BodyType<PaymentOrderInput>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof createPaymentOrder>>, TError, {
     data: BodyType<PaymentOrderInput>;
 }, TContext>;
@@ -523,7 +482,6 @@ export declare const useCreatePaymentOrder: <TError = ErrorType<unknown>, TConte
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof createPaymentOrder>>, TError, {
         data: BodyType<PaymentOrderInput>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof createPaymentOrder>>, TError, {
     data: BodyType<PaymentOrderInput>;
 }, TContext>;
@@ -536,7 +494,6 @@ export declare const getVerifyPaymentMutationOptions: <TError = ErrorType<unknow
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof verifyPayment>>, TError, {
         data: BodyType<PaymentVerification>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof verifyPayment>>, TError, {
     data: BodyType<PaymentVerification>;
 }, TContext>;
@@ -550,7 +507,6 @@ export declare const useVerifyPayment: <TError = ErrorType<unknown>, TContext = 
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof verifyPayment>>, TError, {
         data: BodyType<PaymentVerification>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof verifyPayment>>, TError, {
     data: BodyType<PaymentVerification>;
 }, TContext>;
@@ -562,7 +518,6 @@ export declare const listAddresses: (options?: RequestInit) => Promise<Address[]
 export declare const getListAddressesQueryKey: () => readonly ["/api/addresses"];
 export declare const getListAddressesQueryOptions: <TData = Awaited<ReturnType<typeof listAddresses>>, TError = ErrorType<unknown>>(options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof listAddresses>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseQueryOptions<Awaited<ReturnType<typeof listAddresses>>, TError, TData> & {
     queryKey: QueryKey;
 };
@@ -573,7 +528,6 @@ export type ListAddressesQueryError = ErrorType<unknown>;
  */
 export declare function useListAddresses<TData = Awaited<ReturnType<typeof listAddresses>>, TError = ErrorType<unknown>>(options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof listAddresses>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
 };
@@ -586,7 +540,6 @@ export declare const getCreateAddressMutationOptions: <TError = ErrorType<unknow
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof createAddress>>, TError, {
         data: BodyType<AddressInput>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof createAddress>>, TError, {
     data: BodyType<AddressInput>;
 }, TContext>;
@@ -600,7 +553,6 @@ export declare const useCreateAddress: <TError = ErrorType<unknown>, TContext = 
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof createAddress>>, TError, {
         data: BodyType<AddressInput>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof createAddress>>, TError, {
     data: BodyType<AddressInput>;
 }, TContext>;
@@ -614,7 +566,6 @@ export declare const getUpdateAddressMutationOptions: <TError = ErrorType<unknow
         id: number;
         data: BodyType<AddressUpdate>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof updateAddress>>, TError, {
     id: number;
     data: BodyType<AddressUpdate>;
@@ -630,7 +581,6 @@ export declare const useUpdateAddress: <TError = ErrorType<unknown>, TContext = 
         id: number;
         data: BodyType<AddressUpdate>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof updateAddress>>, TError, {
     id: number;
     data: BodyType<AddressUpdate>;
@@ -644,7 +594,6 @@ export declare const getDeleteAddressMutationOptions: <TError = ErrorType<unknow
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteAddress>>, TError, {
         id: number;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof deleteAddress>>, TError, {
     id: number;
 }, TContext>;
@@ -657,7 +606,6 @@ export declare const useDeleteAddress: <TError = ErrorType<unknown>, TContext = 
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteAddress>>, TError, {
         id: number;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof deleteAddress>>, TError, {
     id: number;
 }, TContext>;
@@ -669,7 +617,6 @@ export declare const getWishlist: (options?: RequestInit) => Promise<WishlistIte
 export declare const getGetWishlistQueryKey: () => readonly ["/api/wishlist"];
 export declare const getGetWishlistQueryOptions: <TData = Awaited<ReturnType<typeof getWishlist>>, TError = ErrorType<unknown>>(options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof getWishlist>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseQueryOptions<Awaited<ReturnType<typeof getWishlist>>, TError, TData> & {
     queryKey: QueryKey;
 };
@@ -680,7 +627,6 @@ export type GetWishlistQueryError = ErrorType<unknown>;
  */
 export declare function useGetWishlist<TData = Awaited<ReturnType<typeof getWishlist>>, TError = ErrorType<unknown>>(options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof getWishlist>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
 };
@@ -693,7 +639,6 @@ export declare const getAddToWishlistMutationOptions: <TError = ErrorType<unknow
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof addToWishlist>>, TError, {
         data: BodyType<WishlistInput>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof addToWishlist>>, TError, {
     data: BodyType<WishlistInput>;
 }, TContext>;
@@ -707,7 +652,6 @@ export declare const useAddToWishlist: <TError = ErrorType<unknown>, TContext = 
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof addToWishlist>>, TError, {
         data: BodyType<WishlistInput>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof addToWishlist>>, TError, {
     data: BodyType<WishlistInput>;
 }, TContext>;
@@ -720,7 +664,6 @@ export declare const getRemoveFromWishlistMutationOptions: <TError = ErrorType<u
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof removeFromWishlist>>, TError, {
         productId: number;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof removeFromWishlist>>, TError, {
     productId: number;
 }, TContext>;
@@ -733,7 +676,6 @@ export declare const useRemoveFromWishlist: <TError = ErrorType<unknown>, TConte
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof removeFromWishlist>>, TError, {
         productId: number;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof removeFromWishlist>>, TError, {
     productId: number;
 }, TContext>;
@@ -746,7 +688,6 @@ export declare const getValidateCouponMutationOptions: <TError = ErrorType<void>
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof validateCoupon>>, TError, {
         data: BodyType<CouponValidateInput>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof validateCoupon>>, TError, {
     data: BodyType<CouponValidateInput>;
 }, TContext>;
@@ -760,7 +701,6 @@ export declare const useValidateCoupon: <TError = ErrorType<void>, TContext = un
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof validateCoupon>>, TError, {
         data: BodyType<CouponValidateInput>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof validateCoupon>>, TError, {
     data: BodyType<CouponValidateInput>;
 }, TContext>;
@@ -772,7 +712,6 @@ export declare const listCoupons: (options?: RequestInit) => Promise<Coupon[]>;
 export declare const getListCouponsQueryKey: () => readonly ["/api/coupons"];
 export declare const getListCouponsQueryOptions: <TData = Awaited<ReturnType<typeof listCoupons>>, TError = ErrorType<unknown>>(options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof listCoupons>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseQueryOptions<Awaited<ReturnType<typeof listCoupons>>, TError, TData> & {
     queryKey: QueryKey;
 };
@@ -783,7 +722,6 @@ export type ListCouponsQueryError = ErrorType<unknown>;
  */
 export declare function useListCoupons<TData = Awaited<ReturnType<typeof listCoupons>>, TError = ErrorType<unknown>>(options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof listCoupons>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
 };
@@ -796,7 +734,6 @@ export declare const getCreateCouponMutationOptions: <TError = ErrorType<unknown
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof createCoupon>>, TError, {
         data: BodyType<CouponInput>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof createCoupon>>, TError, {
     data: BodyType<CouponInput>;
 }, TContext>;
@@ -810,7 +747,6 @@ export declare const useCreateCoupon: <TError = ErrorType<unknown>, TContext = u
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof createCoupon>>, TError, {
         data: BodyType<CouponInput>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof createCoupon>>, TError, {
     data: BodyType<CouponInput>;
 }, TContext>;
@@ -824,7 +760,6 @@ export declare const getUpdateCouponMutationOptions: <TError = ErrorType<unknown
         id: number;
         data: BodyType<CouponUpdate>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof updateCoupon>>, TError, {
     id: number;
     data: BodyType<CouponUpdate>;
@@ -840,7 +775,6 @@ export declare const useUpdateCoupon: <TError = ErrorType<unknown>, TContext = u
         id: number;
         data: BodyType<CouponUpdate>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof updateCoupon>>, TError, {
     id: number;
     data: BodyType<CouponUpdate>;
@@ -854,7 +788,6 @@ export declare const getDeleteCouponMutationOptions: <TError = ErrorType<unknown
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteCoupon>>, TError, {
         id: number;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof deleteCoupon>>, TError, {
     id: number;
 }, TContext>;
@@ -867,7 +800,6 @@ export declare const useDeleteCoupon: <TError = ErrorType<unknown>, TContext = u
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteCoupon>>, TError, {
         id: number;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof deleteCoupon>>, TError, {
     id: number;
 }, TContext>;
@@ -879,7 +811,6 @@ export declare const getAdminStats: (options?: RequestInit) => Promise<AdminStat
 export declare const getGetAdminStatsQueryKey: () => readonly ["/api/admin/stats"];
 export declare const getGetAdminStatsQueryOptions: <TData = Awaited<ReturnType<typeof getAdminStats>>, TError = ErrorType<unknown>>(options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof getAdminStats>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseQueryOptions<Awaited<ReturnType<typeof getAdminStats>>, TError, TData> & {
     queryKey: QueryKey;
 };
@@ -890,7 +821,6 @@ export type GetAdminStatsQueryError = ErrorType<unknown>;
  */
 export declare function useGetAdminStats<TData = Awaited<ReturnType<typeof getAdminStats>>, TError = ErrorType<unknown>>(options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof getAdminStats>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
 };
@@ -902,7 +832,6 @@ export declare const getAdminSettings: (options?: RequestInit) => Promise<AdminS
 export declare const getGetAdminSettingsQueryKey: () => readonly ["/api/admin/settings"];
 export declare const getGetAdminSettingsQueryOptions: <TData = Awaited<ReturnType<typeof getAdminSettings>>, TError = ErrorType<unknown>>(options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof getAdminSettings>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseQueryOptions<Awaited<ReturnType<typeof getAdminSettings>>, TError, TData> & {
     queryKey: QueryKey;
 };
@@ -913,7 +842,6 @@ export type GetAdminSettingsQueryError = ErrorType<unknown>;
  */
 export declare function useGetAdminSettings<TData = Awaited<ReturnType<typeof getAdminSettings>>, TError = ErrorType<unknown>>(options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof getAdminSettings>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
 };
@@ -926,7 +854,6 @@ export declare const getUpdateAdminSettingsMutationOptions: <TError = ErrorType<
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof updateAdminSettings>>, TError, {
         data: BodyType<AdminSettingsUpdate>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationOptions<Awaited<ReturnType<typeof updateAdminSettings>>, TError, {
     data: BodyType<AdminSettingsUpdate>;
 }, TContext>;
@@ -940,7 +867,6 @@ export declare const useUpdateAdminSettings: <TError = ErrorType<unknown>, TCont
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof updateAdminSettings>>, TError, {
         data: BodyType<AdminSettingsUpdate>;
     }, TContext>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseMutationResult<Awaited<ReturnType<typeof updateAdminSettings>>, TError, {
     data: BodyType<AdminSettingsUpdate>;
 }, TContext>;
@@ -952,7 +878,6 @@ export declare const listUsers: (params?: ListUsersParams, options?: RequestInit
 export declare const getListUsersQueryKey: (params?: ListUsersParams) => readonly ["/api/admin/users", ...ListUsersParams[]];
 export declare const getListUsersQueryOptions: <TData = Awaited<ReturnType<typeof listUsers>>, TError = ErrorType<unknown>>(params?: ListUsersParams, options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof listUsers>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }) => UseQueryOptions<Awaited<ReturnType<typeof listUsers>>, TError, TData> & {
     queryKey: QueryKey;
 };
@@ -963,7 +888,6 @@ export type ListUsersQueryError = ErrorType<unknown>;
  */
 export declare function useListUsers<TData = Awaited<ReturnType<typeof listUsers>>, TError = ErrorType<unknown>>(params?: ListUsersParams, options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof listUsers>>, TError, TData>;
-    request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
 };

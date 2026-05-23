@@ -5,6 +5,7 @@
  * Ecommerce API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { AdminStatsMonthlySalesItem } from './adminStatsMonthlySalesItem';
 import type { AdminStatsOrdersByStatusItem } from './adminStatsOrdersByStatusItem';
 import type { AdminStatsRevenueByDayItem } from './adminStatsRevenueByDayItem';
 import type { Order } from './order';
@@ -17,5 +18,6 @@ export interface AdminStats {
     recentOrders: Order[];
     ordersByStatus: AdminStatsOrdersByStatusItem[];
     revenueByDay: AdminStatsRevenueByDayItem[];
+    monthlySales?: AdminStatsMonthlySalesItem[];
 }
 //# sourceMappingURL=adminStats.d.ts.map

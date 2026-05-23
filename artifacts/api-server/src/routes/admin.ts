@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { desc, sql, eq } from "drizzle-orm";
+import { desc, sql, eq, and } from "drizzle-orm";
 import { db, adminSettingsTable, ordersTable, productsTable, appUsersTable } from "@workspace/db";
 import { UpdateAdminSettingsBody, ListUsersQueryParams } from "@workspace/api-zod";
 import { requireAdmin } from "../middlewares/auth";
@@ -16,13 +16,46 @@ const upload = multer({
 
 const router = Router();
 
-router.get("/admin/stats", requireAdmin, async (_req, res): Promise<void> => {
+router.get("/admin/stats", requireAdmin, async (req, res): Promise<void> => {
+  const period = (req.query.period as string) || "all";
+
+  let dateFilter = sql`1=1`; // default to no filter (all-time)
+  if (period === "today") {
+    dateFilter = sql`created_at >= NOW() - INTERVAL '24 hours'`;
+  } else if (period === "week") {
+    dateFilter = sql`created_at >= NOW() - INTERVAL '7 days'`;
+  } else if (period === "month") {
+    dateFilter = sql`created_at >= NOW() - INTERVAL '30 days'`;
+  } else if (period === "quarter") {
+    dateFilter = sql`created_at >= NOW() - INTERVAL '90 days'`;
+  } else if (period === "halfyear") {
+    dateFilter = sql`created_at >= NOW() - INTERVAL '180 days'`;
+  } else if (period === "year") {
+    dateFilter = sql`created_at >= NOW() - INTERVAL '365 days'`;
+  }
+
+  // Same logic for users table
+  let userDateFilter = sql`1=1`;
+  if (period === "today") {
+    userDateFilter = sql`created_at >= NOW() - INTERVAL '24 hours'`;
+  } else if (period === "week") {
+    userDateFilter = sql`created_at >= NOW() - INTERVAL '7 days'`;
+  } else if (period === "month") {
+    userDateFilter = sql`created_at >= NOW() - INTERVAL '30 days'`;
+  } else if (period === "quarter") {
+    userDateFilter = sql`created_at >= NOW() - INTERVAL '90 days'`;
+  } else if (period === "halfyear") {
+    userDateFilter = sql`created_at >= NOW() - INTERVAL '180 days'`;
+  } else if (period === "year") {
+    userDateFilter = sql`created_at >= NOW() - INTERVAL '365 days'`;
+  }
+
   const [revenueResult, ordersResult, productsResult, usersResult, pendingResult] = await Promise.all([
-    db.select({ total: sql<number>`sum(cast(total_amount as numeric))` }).from(ordersTable).where(eq(ordersTable.paymentStatus, "paid")),
-    db.select({ count: sql<number>`count(*)` }).from(ordersTable),
+    db.select({ total: sql<number>`sum(cast(total_amount as numeric))` }).from(ordersTable).where(and(eq(ordersTable.paymentStatus, "paid"), dateFilter)),
+    db.select({ count: sql<number>`count(*)` }).from(ordersTable).where(dateFilter),
     db.select({ count: sql<number>`count(*)` }).from(productsTable),
-    db.select({ count: sql<number>`count(*)` }).from(appUsersTable),
-    db.select({ count: sql<number>`count(*)` }).from(ordersTable).where(eq(ordersTable.status, "pending")),
+    db.select({ count: sql<number>`count(*)` }).from(appUsersTable).where(userDateFilter),
+    db.select({ count: sql<number>`count(*)` }).from(ordersTable).where(and(eq(ordersTable.status, "pending"), dateFilter)),
   ]);
 
   const recentOrders = await db
@@ -51,6 +84,19 @@ router.get("/admin/stats", requireAdmin, async (_req, res): Promise<void> => {
     LIMIT 30
   `);
 
+  // Monthly sales aggregate for chart
+  const monthlySalesResult = await db.execute(sql`
+    SELECT 
+      TO_CHAR(created_at, 'YYYY-MM') as month,
+      COUNT(*) as orders_count,
+      SUM(CAST(total_amount AS NUMERIC)) as monthly_revenue
+    FROM orders
+    WHERE payment_status = 'paid'
+    GROUP BY TO_CHAR(created_at, 'YYYY-MM')
+    ORDER BY month ASC
+    LIMIT 12
+  `);
+
   res.json({
     totalRevenue: Number(revenueResult[0]?.total ?? 0),
     totalOrders: Number(ordersResult[0]?.count ?? 0),
@@ -74,6 +120,11 @@ router.get("/admin/stats", requireAdmin, async (_req, res): Promise<void> => {
     revenueByDay: (revenueByDay.rows as Array<{ date: string; revenue: string | number }>).map((r) => ({
       date: String(r.date),
       revenue: Number(r.revenue),
+    })),
+    monthlySales: (monthlySalesResult.rows as Array<{ month: string; orders_count: string | number; monthly_revenue: string | number }>).map((m) => ({
+      month: String(m.month),
+      orders: Number(m.orders_count),
+      revenue: Number(m.monthly_revenue),
     })),
   });
 });

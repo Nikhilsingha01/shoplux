@@ -35,8 +35,10 @@ export interface Product {
     /** @nullable */
     rating?: number | null;
     reviewCount?: number;
-    deliveryCharge?: number;
-    isDeliveryChargeApplicable?: boolean;
+    /** @nullable */
+    deliveryCharge?: number | null;
+    /** @nullable */
+    isDeliveryChargeApplicable?: boolean | null;
     createdAt: string;
 }
 export interface ProductInput {
@@ -74,6 +76,8 @@ export interface ProductUpdate {
     isTrending?: boolean;
     isNewArrival?: boolean;
     isBestSeller?: boolean;
+    deliveryCharge?: number;
+    isDeliveryChargeApplicable?: boolean;
 }
 export interface ProductListResponse {
     products: Product[];
@@ -136,6 +140,16 @@ export interface BannerUpdate {
     isActive?: boolean;
     sortOrder?: number;
 }
+export type OrderItemReturnBankDetails = {
+    /** @nullable */
+    bankName?: string | null;
+    /** @nullable */
+    accountNumber?: string | null;
+    /** @nullable */
+    ifscCode?: string | null;
+    /** @nullable */
+    accountHolder?: string | null;
+};
 export interface OrderItem {
     id: number;
     productId: number;
@@ -148,6 +162,13 @@ export interface OrderItem {
     variant?: string | null;
     /** @nullable */
     returnStatus?: string | null;
+    /** @nullable */
+    returnReason?: string | null;
+    /** @nullable */
+    returnId?: number | null;
+    /** @nullable */
+    returnImageUrl?: string | null;
+    returnBankDetails?: OrderItemReturnBankDetails;
 }
 export interface OrderItemInput {
     productId: number;
@@ -172,6 +193,7 @@ export interface Address {
 }
 export interface Order {
     id: number;
+    customerOrderNumber?: number;
     userId: string;
     status: string;
     paymentMethod: string;
@@ -323,6 +345,11 @@ export type AdminStatsRevenueByDayItem = {
     date: string;
     revenue: number;
 };
+export type AdminStatsMonthlySalesItem = {
+    month: string;
+    orders: number;
+    revenue: number;
+};
 export interface AdminStats {
     totalRevenue: number;
     totalOrders: number;
@@ -332,6 +359,7 @@ export interface AdminStats {
     recentOrders: Order[];
     ordersByStatus: AdminStatsOrdersByStatusItem[];
     revenueByDay: AdminStatsRevenueByDayItem[];
+    monthlySales?: AdminStatsMonthlySalesItem[];
 }
 export interface AdminSettings {
     id: number;
@@ -351,6 +379,12 @@ export interface AdminSettings {
     instagramUrl?: string | null;
     /** @nullable */
     adminClerkUserId?: string | null;
+    /** @nullable */
+    trustBadge1?: string | null;
+    /** @nullable */
+    trustBadge2?: string | null;
+    /** @nullable */
+    trustBadge3?: string | null;
 }
 export interface AdminSettingsUpdate {
     storeName?: string;
@@ -363,6 +397,9 @@ export interface AdminSettingsUpdate {
     whatsappNumber?: string;
     instagramUrl?: string;
     adminClerkUserId?: string;
+    trustBadge1?: string;
+    trustBadge2?: string;
+    trustBadge3?: string;
 }
 export interface AppUser {
     id: number;

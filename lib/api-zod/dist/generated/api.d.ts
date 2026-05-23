@@ -1223,6 +1223,7 @@ export declare const ListOrdersQueryParams: zod.ZodObject<{
 export declare const ListOrdersResponse: zod.ZodObject<{
     orders: zod.ZodArray<zod.ZodObject<{
         id: zod.ZodNumber;
+        customerOrderNumber: zod.ZodOptional<zod.ZodNumber>;
         userId: zod.ZodString;
         status: zod.ZodString;
         paymentMethod: zod.ZodString;
@@ -1242,6 +1243,26 @@ export declare const ListOrdersResponse: zod.ZodObject<{
             price: zod.ZodNumber;
             quantity: zod.ZodNumber;
             variant: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+            returnStatus: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+            returnReason: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+            returnId: zod.ZodOptional<zod.ZodNullable<zod.ZodNumber>>;
+            returnImageUrl: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+            returnBankDetails: zod.ZodOptional<zod.ZodObject<{
+                bankName: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+                accountNumber: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+                ifscCode: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+                accountHolder: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+            }, "strip", zod.ZodTypeAny, {
+                bankName?: string | null | undefined;
+                accountNumber?: string | null | undefined;
+                ifscCode?: string | null | undefined;
+                accountHolder?: string | null | undefined;
+            }, {
+                bankName?: string | null | undefined;
+                accountNumber?: string | null | undefined;
+                ifscCode?: string | null | undefined;
+                accountHolder?: string | null | undefined;
+            }>>;
         }, "strip", zod.ZodTypeAny, {
             id: number;
             price: number;
@@ -1250,6 +1271,16 @@ export declare const ListOrdersResponse: zod.ZodObject<{
             quantity: number;
             productImage?: string | null | undefined;
             variant?: string | null | undefined;
+            returnStatus?: string | null | undefined;
+            returnReason?: string | null | undefined;
+            returnId?: number | null | undefined;
+            returnImageUrl?: string | null | undefined;
+            returnBankDetails?: {
+                bankName?: string | null | undefined;
+                accountNumber?: string | null | undefined;
+                ifscCode?: string | null | undefined;
+                accountHolder?: string | null | undefined;
+            } | undefined;
         }, {
             id: number;
             price: number;
@@ -1258,6 +1289,16 @@ export declare const ListOrdersResponse: zod.ZodObject<{
             quantity: number;
             productImage?: string | null | undefined;
             variant?: string | null | undefined;
+            returnStatus?: string | null | undefined;
+            returnReason?: string | null | undefined;
+            returnId?: number | null | undefined;
+            returnImageUrl?: string | null | undefined;
+            returnBankDetails?: {
+                bankName?: string | null | undefined;
+                accountNumber?: string | null | undefined;
+                ifscCode?: string | null | undefined;
+                accountHolder?: string | null | undefined;
+            } | undefined;
         }>, "many">;
         address: zod.ZodOptional<zod.ZodObject<{
             id: zod.ZodNumber;
@@ -1315,9 +1356,20 @@ export declare const ListOrdersResponse: zod.ZodObject<{
             quantity: number;
             productImage?: string | null | undefined;
             variant?: string | null | undefined;
+            returnStatus?: string | null | undefined;
+            returnReason?: string | null | undefined;
+            returnId?: number | null | undefined;
+            returnImageUrl?: string | null | undefined;
+            returnBankDetails?: {
+                bankName?: string | null | undefined;
+                accountNumber?: string | null | undefined;
+                ifscCode?: string | null | undefined;
+                accountHolder?: string | null | undefined;
+            } | undefined;
         }[];
         discount?: number | undefined;
         deliveryCharge?: number | undefined;
+        customerOrderNumber?: number | undefined;
         paymentStatus?: string | undefined;
         subtotal?: number | undefined;
         couponCode?: string | null | undefined;
@@ -1354,9 +1406,20 @@ export declare const ListOrdersResponse: zod.ZodObject<{
             quantity: number;
             productImage?: string | null | undefined;
             variant?: string | null | undefined;
+            returnStatus?: string | null | undefined;
+            returnReason?: string | null | undefined;
+            returnId?: number | null | undefined;
+            returnImageUrl?: string | null | undefined;
+            returnBankDetails?: {
+                bankName?: string | null | undefined;
+                accountNumber?: string | null | undefined;
+                ifscCode?: string | null | undefined;
+                accountHolder?: string | null | undefined;
+            } | undefined;
         }[];
         discount?: number | undefined;
         deliveryCharge?: number | undefined;
+        customerOrderNumber?: number | undefined;
         paymentStatus?: string | undefined;
         subtotal?: number | undefined;
         couponCode?: string | null | undefined;
@@ -1401,9 +1464,20 @@ export declare const ListOrdersResponse: zod.ZodObject<{
             quantity: number;
             productImage?: string | null | undefined;
             variant?: string | null | undefined;
+            returnStatus?: string | null | undefined;
+            returnReason?: string | null | undefined;
+            returnId?: number | null | undefined;
+            returnImageUrl?: string | null | undefined;
+            returnBankDetails?: {
+                bankName?: string | null | undefined;
+                accountNumber?: string | null | undefined;
+                ifscCode?: string | null | undefined;
+                accountHolder?: string | null | undefined;
+            } | undefined;
         }[];
         discount?: number | undefined;
         deliveryCharge?: number | undefined;
+        customerOrderNumber?: number | undefined;
         paymentStatus?: string | undefined;
         subtotal?: number | undefined;
         couponCode?: string | null | undefined;
@@ -1445,9 +1519,20 @@ export declare const ListOrdersResponse: zod.ZodObject<{
             quantity: number;
             productImage?: string | null | undefined;
             variant?: string | null | undefined;
+            returnStatus?: string | null | undefined;
+            returnReason?: string | null | undefined;
+            returnId?: number | null | undefined;
+            returnImageUrl?: string | null | undefined;
+            returnBankDetails?: {
+                bankName?: string | null | undefined;
+                accountNumber?: string | null | undefined;
+                ifscCode?: string | null | undefined;
+                accountHolder?: string | null | undefined;
+            } | undefined;
         }[];
         discount?: number | undefined;
         deliveryCharge?: number | undefined;
+        customerOrderNumber?: number | undefined;
         paymentStatus?: string | undefined;
         subtotal?: number | undefined;
         couponCode?: string | null | undefined;
@@ -1542,6 +1627,7 @@ export declare const GetOrderParams: zod.ZodObject<{
 }>;
 export declare const GetOrderResponse: zod.ZodObject<{
     id: zod.ZodNumber;
+    customerOrderNumber: zod.ZodOptional<zod.ZodNumber>;
     userId: zod.ZodString;
     status: zod.ZodString;
     paymentMethod: zod.ZodString;
@@ -1561,6 +1647,26 @@ export declare const GetOrderResponse: zod.ZodObject<{
         price: zod.ZodNumber;
         quantity: zod.ZodNumber;
         variant: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+        returnStatus: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+        returnReason: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+        returnId: zod.ZodOptional<zod.ZodNullable<zod.ZodNumber>>;
+        returnImageUrl: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+        returnBankDetails: zod.ZodOptional<zod.ZodObject<{
+            bankName: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+            accountNumber: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+            ifscCode: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+            accountHolder: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+        }, "strip", zod.ZodTypeAny, {
+            bankName?: string | null | undefined;
+            accountNumber?: string | null | undefined;
+            ifscCode?: string | null | undefined;
+            accountHolder?: string | null | undefined;
+        }, {
+            bankName?: string | null | undefined;
+            accountNumber?: string | null | undefined;
+            ifscCode?: string | null | undefined;
+            accountHolder?: string | null | undefined;
+        }>>;
     }, "strip", zod.ZodTypeAny, {
         id: number;
         price: number;
@@ -1569,6 +1675,16 @@ export declare const GetOrderResponse: zod.ZodObject<{
         quantity: number;
         productImage?: string | null | undefined;
         variant?: string | null | undefined;
+        returnStatus?: string | null | undefined;
+        returnReason?: string | null | undefined;
+        returnId?: number | null | undefined;
+        returnImageUrl?: string | null | undefined;
+        returnBankDetails?: {
+            bankName?: string | null | undefined;
+            accountNumber?: string | null | undefined;
+            ifscCode?: string | null | undefined;
+            accountHolder?: string | null | undefined;
+        } | undefined;
     }, {
         id: number;
         price: number;
@@ -1577,6 +1693,16 @@ export declare const GetOrderResponse: zod.ZodObject<{
         quantity: number;
         productImage?: string | null | undefined;
         variant?: string | null | undefined;
+        returnStatus?: string | null | undefined;
+        returnReason?: string | null | undefined;
+        returnId?: number | null | undefined;
+        returnImageUrl?: string | null | undefined;
+        returnBankDetails?: {
+            bankName?: string | null | undefined;
+            accountNumber?: string | null | undefined;
+            ifscCode?: string | null | undefined;
+            accountHolder?: string | null | undefined;
+        } | undefined;
     }>, "many">;
     address: zod.ZodOptional<zod.ZodObject<{
         id: zod.ZodNumber;
@@ -1634,9 +1760,20 @@ export declare const GetOrderResponse: zod.ZodObject<{
         quantity: number;
         productImage?: string | null | undefined;
         variant?: string | null | undefined;
+        returnStatus?: string | null | undefined;
+        returnReason?: string | null | undefined;
+        returnId?: number | null | undefined;
+        returnImageUrl?: string | null | undefined;
+        returnBankDetails?: {
+            bankName?: string | null | undefined;
+            accountNumber?: string | null | undefined;
+            ifscCode?: string | null | undefined;
+            accountHolder?: string | null | undefined;
+        } | undefined;
     }[];
     discount?: number | undefined;
     deliveryCharge?: number | undefined;
+    customerOrderNumber?: number | undefined;
     paymentStatus?: string | undefined;
     subtotal?: number | undefined;
     couponCode?: string | null | undefined;
@@ -1673,9 +1810,20 @@ export declare const GetOrderResponse: zod.ZodObject<{
         quantity: number;
         productImage?: string | null | undefined;
         variant?: string | null | undefined;
+        returnStatus?: string | null | undefined;
+        returnReason?: string | null | undefined;
+        returnId?: number | null | undefined;
+        returnImageUrl?: string | null | undefined;
+        returnBankDetails?: {
+            bankName?: string | null | undefined;
+            accountNumber?: string | null | undefined;
+            ifscCode?: string | null | undefined;
+            accountHolder?: string | null | undefined;
+        } | undefined;
     }[];
     discount?: number | undefined;
     deliveryCharge?: number | undefined;
+    customerOrderNumber?: number | undefined;
     paymentStatus?: string | undefined;
     subtotal?: number | undefined;
     couponCode?: string | null | undefined;
@@ -1720,6 +1868,7 @@ export declare const UpdateOrderStatusBody: zod.ZodObject<{
 }>;
 export declare const UpdateOrderStatusResponse: zod.ZodObject<{
     id: zod.ZodNumber;
+    customerOrderNumber: zod.ZodOptional<zod.ZodNumber>;
     userId: zod.ZodString;
     status: zod.ZodString;
     paymentMethod: zod.ZodString;
@@ -1739,6 +1888,26 @@ export declare const UpdateOrderStatusResponse: zod.ZodObject<{
         price: zod.ZodNumber;
         quantity: zod.ZodNumber;
         variant: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+        returnStatus: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+        returnReason: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+        returnId: zod.ZodOptional<zod.ZodNullable<zod.ZodNumber>>;
+        returnImageUrl: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+        returnBankDetails: zod.ZodOptional<zod.ZodObject<{
+            bankName: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+            accountNumber: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+            ifscCode: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+            accountHolder: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+        }, "strip", zod.ZodTypeAny, {
+            bankName?: string | null | undefined;
+            accountNumber?: string | null | undefined;
+            ifscCode?: string | null | undefined;
+            accountHolder?: string | null | undefined;
+        }, {
+            bankName?: string | null | undefined;
+            accountNumber?: string | null | undefined;
+            ifscCode?: string | null | undefined;
+            accountHolder?: string | null | undefined;
+        }>>;
     }, "strip", zod.ZodTypeAny, {
         id: number;
         price: number;
@@ -1747,6 +1916,16 @@ export declare const UpdateOrderStatusResponse: zod.ZodObject<{
         quantity: number;
         productImage?: string | null | undefined;
         variant?: string | null | undefined;
+        returnStatus?: string | null | undefined;
+        returnReason?: string | null | undefined;
+        returnId?: number | null | undefined;
+        returnImageUrl?: string | null | undefined;
+        returnBankDetails?: {
+            bankName?: string | null | undefined;
+            accountNumber?: string | null | undefined;
+            ifscCode?: string | null | undefined;
+            accountHolder?: string | null | undefined;
+        } | undefined;
     }, {
         id: number;
         price: number;
@@ -1755,6 +1934,16 @@ export declare const UpdateOrderStatusResponse: zod.ZodObject<{
         quantity: number;
         productImage?: string | null | undefined;
         variant?: string | null | undefined;
+        returnStatus?: string | null | undefined;
+        returnReason?: string | null | undefined;
+        returnId?: number | null | undefined;
+        returnImageUrl?: string | null | undefined;
+        returnBankDetails?: {
+            bankName?: string | null | undefined;
+            accountNumber?: string | null | undefined;
+            ifscCode?: string | null | undefined;
+            accountHolder?: string | null | undefined;
+        } | undefined;
     }>, "many">;
     address: zod.ZodOptional<zod.ZodObject<{
         id: zod.ZodNumber;
@@ -1812,9 +2001,20 @@ export declare const UpdateOrderStatusResponse: zod.ZodObject<{
         quantity: number;
         productImage?: string | null | undefined;
         variant?: string | null | undefined;
+        returnStatus?: string | null | undefined;
+        returnReason?: string | null | undefined;
+        returnId?: number | null | undefined;
+        returnImageUrl?: string | null | undefined;
+        returnBankDetails?: {
+            bankName?: string | null | undefined;
+            accountNumber?: string | null | undefined;
+            ifscCode?: string | null | undefined;
+            accountHolder?: string | null | undefined;
+        } | undefined;
     }[];
     discount?: number | undefined;
     deliveryCharge?: number | undefined;
+    customerOrderNumber?: number | undefined;
     paymentStatus?: string | undefined;
     subtotal?: number | undefined;
     couponCode?: string | null | undefined;
@@ -1851,9 +2051,20 @@ export declare const UpdateOrderStatusResponse: zod.ZodObject<{
         quantity: number;
         productImage?: string | null | undefined;
         variant?: string | null | undefined;
+        returnStatus?: string | null | undefined;
+        returnReason?: string | null | undefined;
+        returnId?: number | null | undefined;
+        returnImageUrl?: string | null | undefined;
+        returnBankDetails?: {
+            bankName?: string | null | undefined;
+            accountNumber?: string | null | undefined;
+            ifscCode?: string | null | undefined;
+            accountHolder?: string | null | undefined;
+        } | undefined;
     }[];
     discount?: number | undefined;
     deliveryCharge?: number | undefined;
+    customerOrderNumber?: number | undefined;
     paymentStatus?: string | undefined;
     subtotal?: number | undefined;
     couponCode?: string | null | undefined;
@@ -2166,6 +2377,8 @@ export declare const GetWishlistResponseItem: zod.ZodObject<{
         isBestSeller: zod.ZodOptional<zod.ZodBoolean>;
         rating: zod.ZodOptional<zod.ZodNullable<zod.ZodNumber>>;
         reviewCount: zod.ZodOptional<zod.ZodNumber>;
+        deliveryCharge: zod.ZodOptional<zod.ZodNullable<zod.ZodNumber>>;
+        isDeliveryChargeApplicable: zod.ZodOptional<zod.ZodNullable<zod.ZodBoolean>>;
         createdAt: zod.ZodString;
     }, "strip", zod.ZodTypeAny, {
         id: number;
@@ -2188,6 +2401,8 @@ export declare const GetWishlistResponseItem: zod.ZodObject<{
         isBestSeller?: boolean | undefined;
         rating?: number | null | undefined;
         reviewCount?: number | undefined;
+        deliveryCharge?: number | null | undefined;
+        isDeliveryChargeApplicable?: boolean | null | undefined;
     }, {
         id: number;
         name: string;
@@ -2209,6 +2424,8 @@ export declare const GetWishlistResponseItem: zod.ZodObject<{
         isBestSeller?: boolean | undefined;
         rating?: number | null | undefined;
         reviewCount?: number | undefined;
+        deliveryCharge?: number | null | undefined;
+        isDeliveryChargeApplicable?: boolean | null | undefined;
     }>;
 }, "strip", zod.ZodTypeAny, {
     id: number;
@@ -2235,6 +2452,8 @@ export declare const GetWishlistResponseItem: zod.ZodObject<{
         isBestSeller?: boolean | undefined;
         rating?: number | null | undefined;
         reviewCount?: number | undefined;
+        deliveryCharge?: number | null | undefined;
+        isDeliveryChargeApplicable?: boolean | null | undefined;
     };
 }, {
     id: number;
@@ -2261,6 +2480,8 @@ export declare const GetWishlistResponseItem: zod.ZodObject<{
         isBestSeller?: boolean | undefined;
         rating?: number | null | undefined;
         reviewCount?: number | undefined;
+        deliveryCharge?: number | null | undefined;
+        isDeliveryChargeApplicable?: boolean | null | undefined;
     };
 }>;
 export declare const GetWishlistResponse: zod.ZodArray<zod.ZodObject<{
@@ -2287,6 +2508,8 @@ export declare const GetWishlistResponse: zod.ZodArray<zod.ZodObject<{
         isBestSeller: zod.ZodOptional<zod.ZodBoolean>;
         rating: zod.ZodOptional<zod.ZodNullable<zod.ZodNumber>>;
         reviewCount: zod.ZodOptional<zod.ZodNumber>;
+        deliveryCharge: zod.ZodOptional<zod.ZodNullable<zod.ZodNumber>>;
+        isDeliveryChargeApplicable: zod.ZodOptional<zod.ZodNullable<zod.ZodBoolean>>;
         createdAt: zod.ZodString;
     }, "strip", zod.ZodTypeAny, {
         id: number;
@@ -2309,6 +2532,8 @@ export declare const GetWishlistResponse: zod.ZodArray<zod.ZodObject<{
         isBestSeller?: boolean | undefined;
         rating?: number | null | undefined;
         reviewCount?: number | undefined;
+        deliveryCharge?: number | null | undefined;
+        isDeliveryChargeApplicable?: boolean | null | undefined;
     }, {
         id: number;
         name: string;
@@ -2330,6 +2555,8 @@ export declare const GetWishlistResponse: zod.ZodArray<zod.ZodObject<{
         isBestSeller?: boolean | undefined;
         rating?: number | null | undefined;
         reviewCount?: number | undefined;
+        deliveryCharge?: number | null | undefined;
+        isDeliveryChargeApplicable?: boolean | null | undefined;
     }>;
 }, "strip", zod.ZodTypeAny, {
     id: number;
@@ -2356,6 +2583,8 @@ export declare const GetWishlistResponse: zod.ZodArray<zod.ZodObject<{
         isBestSeller?: boolean | undefined;
         rating?: number | null | undefined;
         reviewCount?: number | undefined;
+        deliveryCharge?: number | null | undefined;
+        isDeliveryChargeApplicable?: boolean | null | undefined;
     };
 }, {
     id: number;
@@ -2382,6 +2611,8 @@ export declare const GetWishlistResponse: zod.ZodArray<zod.ZodObject<{
         isBestSeller?: boolean | undefined;
         rating?: number | null | undefined;
         reviewCount?: number | undefined;
+        deliveryCharge?: number | null | undefined;
+        isDeliveryChargeApplicable?: boolean | null | undefined;
     };
 }>, "many">;
 /**
@@ -2664,6 +2895,7 @@ export declare const GetAdminStatsResponse: zod.ZodObject<{
     pendingOrders: zod.ZodOptional<zod.ZodNumber>;
     recentOrders: zod.ZodArray<zod.ZodObject<{
         id: zod.ZodNumber;
+        customerOrderNumber: zod.ZodOptional<zod.ZodNumber>;
         userId: zod.ZodString;
         status: zod.ZodString;
         paymentMethod: zod.ZodString;
@@ -2683,6 +2915,26 @@ export declare const GetAdminStatsResponse: zod.ZodObject<{
             price: zod.ZodNumber;
             quantity: zod.ZodNumber;
             variant: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+            returnStatus: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+            returnReason: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+            returnId: zod.ZodOptional<zod.ZodNullable<zod.ZodNumber>>;
+            returnImageUrl: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+            returnBankDetails: zod.ZodOptional<zod.ZodObject<{
+                bankName: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+                accountNumber: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+                ifscCode: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+                accountHolder: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+            }, "strip", zod.ZodTypeAny, {
+                bankName?: string | null | undefined;
+                accountNumber?: string | null | undefined;
+                ifscCode?: string | null | undefined;
+                accountHolder?: string | null | undefined;
+            }, {
+                bankName?: string | null | undefined;
+                accountNumber?: string | null | undefined;
+                ifscCode?: string | null | undefined;
+                accountHolder?: string | null | undefined;
+            }>>;
         }, "strip", zod.ZodTypeAny, {
             id: number;
             price: number;
@@ -2691,6 +2943,16 @@ export declare const GetAdminStatsResponse: zod.ZodObject<{
             quantity: number;
             productImage?: string | null | undefined;
             variant?: string | null | undefined;
+            returnStatus?: string | null | undefined;
+            returnReason?: string | null | undefined;
+            returnId?: number | null | undefined;
+            returnImageUrl?: string | null | undefined;
+            returnBankDetails?: {
+                bankName?: string | null | undefined;
+                accountNumber?: string | null | undefined;
+                ifscCode?: string | null | undefined;
+                accountHolder?: string | null | undefined;
+            } | undefined;
         }, {
             id: number;
             price: number;
@@ -2699,6 +2961,16 @@ export declare const GetAdminStatsResponse: zod.ZodObject<{
             quantity: number;
             productImage?: string | null | undefined;
             variant?: string | null | undefined;
+            returnStatus?: string | null | undefined;
+            returnReason?: string | null | undefined;
+            returnId?: number | null | undefined;
+            returnImageUrl?: string | null | undefined;
+            returnBankDetails?: {
+                bankName?: string | null | undefined;
+                accountNumber?: string | null | undefined;
+                ifscCode?: string | null | undefined;
+                accountHolder?: string | null | undefined;
+            } | undefined;
         }>, "many">;
         address: zod.ZodOptional<zod.ZodObject<{
             id: zod.ZodNumber;
@@ -2756,9 +3028,20 @@ export declare const GetAdminStatsResponse: zod.ZodObject<{
             quantity: number;
             productImage?: string | null | undefined;
             variant?: string | null | undefined;
+            returnStatus?: string | null | undefined;
+            returnReason?: string | null | undefined;
+            returnId?: number | null | undefined;
+            returnImageUrl?: string | null | undefined;
+            returnBankDetails?: {
+                bankName?: string | null | undefined;
+                accountNumber?: string | null | undefined;
+                ifscCode?: string | null | undefined;
+                accountHolder?: string | null | undefined;
+            } | undefined;
         }[];
         discount?: number | undefined;
         deliveryCharge?: number | undefined;
+        customerOrderNumber?: number | undefined;
         paymentStatus?: string | undefined;
         subtotal?: number | undefined;
         couponCode?: string | null | undefined;
@@ -2795,9 +3078,20 @@ export declare const GetAdminStatsResponse: zod.ZodObject<{
             quantity: number;
             productImage?: string | null | undefined;
             variant?: string | null | undefined;
+            returnStatus?: string | null | undefined;
+            returnReason?: string | null | undefined;
+            returnId?: number | null | undefined;
+            returnImageUrl?: string | null | undefined;
+            returnBankDetails?: {
+                bankName?: string | null | undefined;
+                accountNumber?: string | null | undefined;
+                ifscCode?: string | null | undefined;
+                accountHolder?: string | null | undefined;
+            } | undefined;
         }[];
         discount?: number | undefined;
         deliveryCharge?: number | undefined;
+        customerOrderNumber?: number | undefined;
         paymentStatus?: string | undefined;
         subtotal?: number | undefined;
         couponCode?: string | null | undefined;
@@ -2840,6 +3134,19 @@ export declare const GetAdminStatsResponse: zod.ZodObject<{
         date: string;
         revenue: number;
     }>, "many">;
+    monthlySales: zod.ZodOptional<zod.ZodArray<zod.ZodObject<{
+        month: zod.ZodString;
+        orders: zod.ZodNumber;
+        revenue: zod.ZodNumber;
+    }, "strip", zod.ZodTypeAny, {
+        orders: number;
+        revenue: number;
+        month: string;
+    }, {
+        orders: number;
+        revenue: number;
+        month: string;
+    }>, "many">>;
 }, "strip", zod.ZodTypeAny, {
     totalRevenue: number;
     totalOrders: number;
@@ -2860,9 +3167,20 @@ export declare const GetAdminStatsResponse: zod.ZodObject<{
             quantity: number;
             productImage?: string | null | undefined;
             variant?: string | null | undefined;
+            returnStatus?: string | null | undefined;
+            returnReason?: string | null | undefined;
+            returnId?: number | null | undefined;
+            returnImageUrl?: string | null | undefined;
+            returnBankDetails?: {
+                bankName?: string | null | undefined;
+                accountNumber?: string | null | undefined;
+                ifscCode?: string | null | undefined;
+                accountHolder?: string | null | undefined;
+            } | undefined;
         }[];
         discount?: number | undefined;
         deliveryCharge?: number | undefined;
+        customerOrderNumber?: number | undefined;
         paymentStatus?: string | undefined;
         subtotal?: number | undefined;
         couponCode?: string | null | undefined;
@@ -2894,6 +3212,11 @@ export declare const GetAdminStatsResponse: zod.ZodObject<{
         revenue: number;
     }[];
     pendingOrders?: number | undefined;
+    monthlySales?: {
+        orders: number;
+        revenue: number;
+        month: string;
+    }[] | undefined;
 }, {
     totalRevenue: number;
     totalOrders: number;
@@ -2914,9 +3237,20 @@ export declare const GetAdminStatsResponse: zod.ZodObject<{
             quantity: number;
             productImage?: string | null | undefined;
             variant?: string | null | undefined;
+            returnStatus?: string | null | undefined;
+            returnReason?: string | null | undefined;
+            returnId?: number | null | undefined;
+            returnImageUrl?: string | null | undefined;
+            returnBankDetails?: {
+                bankName?: string | null | undefined;
+                accountNumber?: string | null | undefined;
+                ifscCode?: string | null | undefined;
+                accountHolder?: string | null | undefined;
+            } | undefined;
         }[];
         discount?: number | undefined;
         deliveryCharge?: number | undefined;
+        customerOrderNumber?: number | undefined;
         paymentStatus?: string | undefined;
         subtotal?: number | undefined;
         couponCode?: string | null | undefined;
@@ -2948,6 +3282,11 @@ export declare const GetAdminStatsResponse: zod.ZodObject<{
         revenue: number;
     }[];
     pendingOrders?: number | undefined;
+    monthlySales?: {
+        orders: number;
+        revenue: number;
+        month: string;
+    }[] | undefined;
 }>;
 /**
  * @summary Get store settings

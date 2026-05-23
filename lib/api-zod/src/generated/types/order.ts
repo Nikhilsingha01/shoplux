@@ -10,6 +10,7 @@ import type { OrderItem } from './orderItem';
 
 export interface Order {
   id: number;
+  customerOrderNumber?: number;
   userId: string;
   status: string;
   paymentMethod: string;

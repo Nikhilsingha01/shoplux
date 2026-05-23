@@ -262,7 +262,7 @@ export default function Account() {
                         className="flex justify-between items-center border rounded-lg p-4 hover:bg-muted/50 transition-colors"
                       >
                         <div>
-                          <p className="font-medium text-sm">Order #{order.id}</p>
+                          <p className="font-medium text-sm">Order #{order.customerOrderNumber ?? order.id}</p>
                           <p className="text-xs text-muted-foreground mt-0.5">
                             {new Date(order.createdAt).toLocaleDateString("en-IN", {
                               day: "numeric", month: "short", year: "numeric",
