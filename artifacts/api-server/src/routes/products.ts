@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq, ilike, and, desc, sql } from "drizzle-orm";
+import { eq, ilike, and, desc, sql, or, isNull } from "drizzle-orm";
 import { db, productsTable, categoriesTable } from "@workspace/db";
 import {
   ListProductsQueryParams,
@@ -41,7 +41,7 @@ router.get("/products", async (req, res): Promise<void> => {
   const { category, search, sort, featured, page = 1, limit = 20 } = parsed.data;
   const offset = (page - 1) * limit;
 
-  const conditions = [eq(productsTable.isDeleted, false)];
+  const conditions = [or(eq(productsTable.isDeleted, false), isNull(productsTable.isDeleted))];
   if (category) {
     const cat = await db.select().from(categoriesTable).where(eq(categoriesTable.slug, category)).limit(1);
     if (cat[0]) conditions.push(eq(productsTable.categoryId, cat[0].id));
@@ -85,25 +85,25 @@ router.get("/products/featured", async (_req, res): Promise<void> => {
       .select({ product: productsTable, categoryName: categoriesTable.name })
       .from(productsTable)
       .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
-      .where(and(eq(productsTable.isFeatured, true), eq(productsTable.isDeleted, false)))
+      .where(and(eq(productsTable.isFeatured, true), or(eq(productsTable.isDeleted, false), isNull(productsTable.isDeleted))))
       .limit(8),
     db
       .select({ product: productsTable, categoryName: categoriesTable.name })
       .from(productsTable)
       .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
-      .where(and(eq(productsTable.isTrending, true), eq(productsTable.isDeleted, false)))
+      .where(and(eq(productsTable.isTrending, true), or(eq(productsTable.isDeleted, false), isNull(productsTable.isDeleted))))
       .limit(8),
     db
       .select({ product: productsTable, categoryName: categoriesTable.name })
       .from(productsTable)
       .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
-      .where(and(eq(productsTable.isNewArrival, true), eq(productsTable.isDeleted, false)))
+      .where(and(eq(productsTable.isNewArrival, true), or(eq(productsTable.isDeleted, false), isNull(productsTable.isDeleted))))
       .limit(8),
     db
       .select({ product: productsTable, categoryName: categoriesTable.name })
       .from(productsTable)
       .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
-      .where(and(eq(productsTable.isBestSeller, true), eq(productsTable.isDeleted, false)))
+      .where(and(eq(productsTable.isBestSeller, true), or(eq(productsTable.isDeleted, false), isNull(productsTable.isDeleted))))
       .limit(8),
   ]);
 
@@ -126,7 +126,7 @@ router.get("/products/:id", async (req, res): Promise<void> => {
     .select({ product: productsTable, categoryName: categoriesTable.name })
     .from(productsTable)
     .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
-    .where(and(eq(productsTable.id, params.data.id), eq(productsTable.isDeleted, false)))
+    .where(and(eq(productsTable.id, params.data.id), or(eq(productsTable.isDeleted, false), isNull(productsTable.isDeleted))))
     .limit(1);
 
   if (!result[0]) {

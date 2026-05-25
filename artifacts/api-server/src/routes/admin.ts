@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { desc, sql, eq, and } from "drizzle-orm";
+import { desc, sql, eq, and, or, isNull } from "drizzle-orm";
 import { db, adminSettingsTable, ordersTable, productsTable, appUsersTable } from "@workspace/db";
 import { UpdateAdminSettingsBody, ListUsersQueryParams } from "@workspace/api-zod";
 import { requireAdmin, requireAuth } from "../middlewares/auth";
@@ -53,7 +53,7 @@ router.get("/admin/stats", requireAdmin, async (req, res): Promise<void> => {
   const [revenueResult, ordersResult, productsResult, usersResult, pendingResult] = await Promise.all([
     db.select({ total: sql<number>`sum(cast(total_amount as numeric))` }).from(ordersTable).where(and(eq(ordersTable.paymentStatus, "paid"), dateFilter)),
     db.select({ count: sql<number>`count(*)` }).from(ordersTable).where(dateFilter),
-    db.select({ count: sql<number>`count(*)` }).from(productsTable).where(eq(productsTable.isDeleted, false)),
+    db.select({ count: sql<number>`count(*)` }).from(productsTable).where(or(eq(productsTable.isDeleted, false), isNull(productsTable.isDeleted))),
     db.select({ count: sql<number>`count(*)` }).from(appUsersTable).where(userDateFilter),
     db.select({ count: sql<number>`count(*)` }).from(ordersTable).where(and(eq(ordersTable.status, "pending"), dateFilter)),
   ]);
