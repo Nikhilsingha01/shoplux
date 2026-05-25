@@ -39,6 +39,8 @@ export const ordersTable = pgTable("orders", {
   customerName: text("customer_name"),
   customerEmail: text("customer_email"),
   customerPhone: text("customer_phone"),
+  loyaltyPointsRedeemed: integer("loyalty_points_redeemed").default(0),
+  loyaltyPointsDiscount: numeric("loyalty_points_discount", { precision: 10, scale: 2 }).default("0"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

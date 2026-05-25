@@ -18,8 +18,9 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, MapPin, Package, Heart, LogOut } from "lucide-react";
+import { Plus, Trash2, MapPin, Package, Heart, LogOut, Award, Sparkles } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
+import { useMe } from "@/lib/useAdmin";
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -199,6 +200,7 @@ function AddAddressDialog({
 export default function Account() {
   const { user } = useUser();
   const { signOut } = useClerk();
+  const { data: me } = useMe();
 
   const { data: ordersData } = useListOrders({ limit: 5 });
   const { data: addresses, refetch: refetchAddresses } = useListAddresses();
@@ -312,8 +314,41 @@ export default function Account() {
               </section>
             </div>
 
-            {/* Right column — Addresses */}
+            {/* Right column — Loyalty & Addresses */}
             <div className="space-y-8">
+              {/* Loyalty Points VIP Card */}
+              <section className="bg-gradient-to-br from-amber-600 to-amber-900 text-white rounded-xl p-6 shadow-md relative overflow-hidden">
+                {/* Background decorative shine */}
+                <div className="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute left-10 bottom-0 w-24 h-24 bg-amber-500/20 rounded-full blur-xl pointer-events-none" />
+                
+                <div className="relative z-10 flex flex-col h-full justify-between gap-6">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold tracking-widest bg-white/20 px-2 py-0.5 rounded-full text-amber-100">
+                        ShopLux Club VIP
+                      </span>
+                      <h3 className="font-serif font-bold text-xl mt-2">Loyalty Reward Points</h3>
+                    </div>
+                    <Award className="w-8 h-8 text-amber-200 animate-pulse" />
+                  </div>
+                  
+                  <div>
+                    <p className="text-3xl font-mono font-bold tracking-wider">{(me?.user as any)?.loyaltyPoints ?? 0} pts</p>
+                    <p className="text-xs text-amber-200/90 mt-1 font-medium">
+                      Estimated Value: ₹{Math.floor(((me?.user as any)?.loyaltyPoints ?? 0) / 10) * 1} (Redeemable at checkout)
+                    </p>
+                  </div>
+                  
+                  <div className="border-t border-white/20 pt-4 flex items-center justify-between text-xs text-amber-100">
+                    <span className="flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5" /> Earn 1 pt per ₹10 spent
+                    </span>
+                    <span>100 pts = ₹10</span>
+                  </div>
+                </div>
+              </section>
+
               <section className="bg-background border rounded-xl p-6 shadow-sm">
                 <div className="flex justify-between items-center mb-5">
                   <h2 className="text-lg font-semibold flex items-center gap-2">

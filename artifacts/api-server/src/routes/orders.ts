@@ -273,6 +273,48 @@ router.get("/orders", requireAuth, async (req, res): Promise<void> => {
   });
 });
 
+async function sendAdminWhatsAppNotification(order: any, items: any[], settings: any) {
+  const adminNumber = settings?.whatsappNumber;
+  if (!adminNumber) {
+    logger.info("Admin WhatsApp number not set. Skipping WhatsApp order notification.");
+    return;
+  }
+
+  const itemsSummary = items
+    .map((item) => `${item.productName || "Product"} (x${item.quantity})`)
+    .join(", ");
+
+  const message = `*New Order Placed!*\n\n` +
+    `*Order ID:* ${order.id}\n` +
+    `*Customer:* ${order.customerName || "Anonymous"}\n` +
+    `*Total Amount:* ₹${order.totalAmount}\n` +
+    `*Items:* ${itemsSummary}\n\n` +
+    `Please check the admin panel to process this order.`;
+
+  logger.info({ adminNumber, message }, "Sending WhatsApp admin notification log");
+
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const twilioWhatsappNumber = process.env.TWILIO_WHATSAPP_NUMBER || "whatsapp:+14155238886";
+
+  if (accountSid && authToken && adminNumber) {
+    try {
+      // @ts-ignore
+      const twilio = await import("twilio");
+      const client = twilio.default(accountSid, authToken);
+      const cleanNumber = adminNumber.startsWith("whatsapp:") ? adminNumber : `whatsapp:${adminNumber}`;
+      await client.messages.create({
+        from: twilioWhatsappNumber,
+        to: cleanNumber,
+        body: message,
+      });
+      logger.info("Twilio WhatsApp notification sent successfully!");
+    } catch (err) {
+      logger.error({ err }, "Failed to send Twilio WhatsApp notification");
+    }
+  }
+}
+
 // ─── POST /orders — create ────────────────────────────────────────────────────
 
 router.post("/orders", requireAuth, async (req, res): Promise<void> => {
@@ -308,6 +350,24 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
   const [settings] = await db.select().from(adminSettingsTable).limit(1);
   const storeName = settings?.storeName ?? "ShopLux";
 
+  let finalTotalAmount = totalAmount;
+  let pointsRedeemed = 0;
+  let pointsDiscount = 0;
+
+  // Loyalty points redemption logic (100 points = ₹10)
+  const redeemPointsRequested = req.body.redeemPoints === true || req.body.redeemPoints === "true";
+  if (redeemPointsRequested && appUser && appUser.loyaltyPoints >= 100) {
+    pointsRedeemed = Math.floor(appUser.loyaltyPoints / 100) * 100;
+    pointsDiscount = (pointsRedeemed / 100) * 10;
+    finalTotalAmount = Math.max(0, totalAmount - pointsDiscount);
+
+    // Deduct redeemed points from app_users
+    await db
+      .update(appUsersTable)
+      .set({ loyaltyPoints: appUser.loyaltyPoints - pointsRedeemed })
+      .where(eq(appUsersTable.clerkUserId, userId));
+  }
+
   const [order] = await db
     .insert(ordersTable)
     .values({
@@ -315,18 +375,22 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
       status: "pending",
       paymentMethod,
       paymentStatus: "pending",
-      totalAmount: String(totalAmount),
+      totalAmount: String(finalTotalAmount),
       subtotal: String(subtotal ?? totalAmount),
       deliveryCharge: String(deliveryCharge ?? 0),
-      discount: String(discount ?? 0),
+      discount: String((discount ?? 0) + pointsDiscount),
       couponCode,
       razorpayOrderId,
       addressId,
       customerName: address?.fullName ?? appUser?.fullName,
       customerEmail: address?.email ?? appUser?.email,
       customerPhone: address?.phone ?? appUser?.phone,
+      loyaltyPointsRedeemed: pointsRedeemed,
+      loyaltyPointsDiscount: String(pointsDiscount),
     })
     .returning();
+
+  const insertedItems = [];
 
   // Insert order items and decrement stock
   for (const item of items) {
@@ -336,7 +400,7 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
       .where(eq(productsTable.id, item.productId))
       .limit(1);
 
-    await db.insert(orderItemsTable).values({
+    const [orderItem] = await db.insert(orderItemsTable).values({
       orderId: order.id,
       productId: item.productId,
       productName: product?.name ?? "Unknown Product",
@@ -344,7 +408,9 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
       price: String(item.price),
       quantity: item.quantity,
       variant: item.variant,
-    });
+    }).returning();
+
+    insertedItems.push(orderItem);
 
     if (product) {
       await db
@@ -352,6 +418,15 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
         .set({ stock: Math.max(0, product.stock - item.quantity) })
         .where(eq(productsTable.id, item.productId));
     }
+  }
+
+  // Credit loyalty points earned (1 point per ₹10 spent)
+  const pointsEarned = Math.floor(finalTotalAmount / 10);
+  if (pointsEarned > 0 && appUser) {
+    await db
+      .update(appUsersTable)
+      .set({ loyaltyPoints: sql`${appUsersTable.loyaltyPoints} + ${pointsEarned}` })
+      .where(eq(appUsersTable.clerkUserId, userId));
   }
 
   // Increment coupon usage
@@ -371,6 +446,11 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
 
   const fullOrder = await buildOrderResponse(order);
   res.status(201).json(fullOrder);
+
+  // Trigger WhatsApp admin order notification
+  sendAdminWhatsAppNotification(order, insertedItems, settings).catch((e) =>
+    logger.error({ e }, "WhatsApp admin order notification failed")
+  );
 
   // Send order confirmation email asynchronously (don't block response)
   const emailData = await buildEmailData(fullOrder, storeName);

@@ -9,7 +9,8 @@ import { Link, useLocation } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductCard } from "@/components/ProductCard";
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, ShieldCheck, RefreshCcw, Headphones } from "lucide-react";
+import { ChevronLeft, ChevronRight, ShieldCheck, RefreshCcw, Headphones, Truck, Award, Star } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 function BannerCarousel() {
   const { data: banners, isLoading } = useListBanners();
@@ -240,16 +241,93 @@ function ProductSection({
   );
 }
 
+function FlashSaleCountdown({ endTime }: { endTime: string }) {
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const difference = +new Date(endTime) - +new Date();
+      let timeLeftObj = { hours: 0, minutes: 0, seconds: 0 };
+
+      if (difference > 0) {
+        timeLeftObj = {
+          hours: Math.floor(difference / (1000 * 60 * 60)),
+          minutes: Math.floor((difference / 1000 / 60) % 60),
+          seconds: Math.floor((difference / 1000) % 60),
+        };
+      }
+      return timeLeftObj;
+    };
+
+    setTimeLeft(calculateTimeLeft());
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [endTime]);
+
+  const padZero = (num: number) => String(num).padStart(2, "0");
+
+  return (
+    <div className="flex gap-2 text-center items-center">
+      <div className="bg-amber-950 text-amber-50 px-2.5 py-1.5 font-mono text-xs md:text-sm font-semibold rounded-xs">
+        {padZero(timeLeft.hours)}h
+      </div>
+      <span className="text-amber-900 font-bold">:</span>
+      <div className="bg-amber-950 text-amber-50 px-2.5 py-1.5 font-mono text-xs md:text-sm font-semibold rounded-xs">
+        {padZero(timeLeft.minutes)}m
+      </div>
+      <span className="text-amber-900 font-bold">:</span>
+      <div className="bg-amber-950 text-amber-50 px-2.5 py-1.5 font-mono text-xs md:text-sm font-semibold rounded-xs">
+        {padZero(timeLeft.seconds)}s
+      </div>
+    </div>
+  );
+}
+
 const trustItems = [
-  { icon: ShieldCheck, title: "Secure Payments", desc: "100% safe & encrypted" },
-  { icon: RefreshCcw, title: "Easy Returns", desc: "7-day hassle-free returns" },
-  { icon: Headphones, title: "24/7 Support", desc: "Always here to help" },
+  { icon: ShieldCheck, title: "100% Secure Payment", desc: "Safe & encrypted transactions" },
+  { icon: RefreshCcw, title: "Easy Returns", desc: "7-day hassle-free policy" },
+  { icon: Truck, title: "Fast Delivery", desc: "Quick dispatch & tracking" },
+  { icon: Award, title: "Genuine Products", desc: "100% authentic collections" },
 ];
 
 export default function Home() {
   const { data: featuredData, isLoading } = useListFeaturedProducts();
-
   const [, navigate] = useLocation();
+
+  // Queries for Flash Sales and Testimonials
+  const { data: flashSaleData } = useQuery({
+    queryKey: ["active-flash-sale"],
+    queryFn: async () => {
+      const res = await fetch("/api/flash-sales/active");
+      if (!res.ok) return null;
+      return res.json();
+    }
+  });
+
+  const { data: testimonials = [] } = useQuery({
+    queryKey: ["active-testimonials"],
+    queryFn: async () => {
+      const res = await fetch("/api/testimonials");
+      if (!res.ok) return [];
+      return res.json();
+    }
+  });
+
+  const [recentlyViewed, setRecentlyViewed] = useState<any[]>([]);
+
+  useEffect(() => {
+    try {
+      const items = JSON.parse(localStorage.getItem("recently_viewed") || "[]");
+      if (Array.isArray(items) && items.length > 0) {
+        setRecentlyViewed(items.slice(0, 4));
+      }
+    } catch (e) {
+      console.error("Failed to parse recently viewed items:", e);
+    }
+  }, []);
 
   useEffect(() => {
     const isAdmin =
@@ -270,12 +348,33 @@ export default function Home() {
     <AppLayout>
       <div className="fixed bottom-6 right-6 z-50">
         <Link href="/admin-login">
-          <Button className="rounded-full shadow-2xl px-6 h-12 bg-black hover:bg-black/90 text-white">
+          <Button className="rounded-full shadow-2xl px-6 h-12 bg-black hover:bg-black/90 text-white font-medium tracking-wide">
             Admin Panel
           </Button>
         </Link>
       </div>
       <BannerCarousel />
+
+      {/* Flash Sale Banner */}
+      {flashSaleData?.sale && (
+        <section className="bg-gradient-to-r from-amber-500/10 via-amber-600/10 to-amber-700/10 border-y border-amber-500/20 py-8">
+          <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="space-y-2 text-center md:text-left">
+              <span className="bg-amber-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">⚡ Active Flash Sale</span>
+              <h3 className="text-2xl md:text-3xl font-serif font-bold text-amber-950">{flashSaleData.sale.title}</h3>
+              <p className="text-sm text-amber-800">Enjoy an extra <span className="font-bold">{flashSaleData.sale.discountPercent}% OFF</span> on selected premium arrivals!</p>
+            </div>
+            
+            <div className="flex flex-col items-center md:items-end gap-3">
+              <span className="text-[10px] font-semibold text-amber-900 uppercase tracking-widest">Offers Expiring In:</span>
+              <FlashSaleCountdown endTime={flashSaleData.sale.endTime} />
+              <Link href="/products">
+                <Button size="sm" className="bg-amber-700 hover:bg-amber-800 text-white mt-2 rounded-xs px-6">Shop Flash Deals</Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Trust Bar */}
       <section className="border-y bg-muted/30">
@@ -334,6 +433,49 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Testimonials */}
+      {testimonials.length > 0 && (
+        <section className="py-20 border-y bg-muted/20">
+          <div className="container mx-auto px-4 max-w-6xl">
+            <div className="text-center mb-16 space-y-2">
+              <p className="text-[10px] uppercase tracking-widest text-primary font-bold">What Our Customers Say</p>
+              <h2 className="text-3xl font-serif font-bold">Customer Testimonials</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {testimonials.map((test: any) => (
+                <div key={test.id} className="bg-background border rounded-sm p-8 shadow-sm flex flex-col justify-between space-y-6 relative hover:shadow-md transition-shadow">
+                  <div className="space-y-4">
+                    <div className="flex gap-1 text-amber-500">
+                      {Array.from({ length: test.rating }).map((_, i) => (
+                        <Star key={i} className="w-3.5 h-3.5 fill-current" />
+                      ))}
+                    </div>
+                    <p className="text-muted-foreground italic text-xs md:text-sm leading-relaxed">"{test.reviewText}"</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-4 pt-4 border-t">
+                    <div className="w-10 h-10 rounded-full bg-secondary overflow-hidden flex-shrink-0 border">
+                      {test.imageUrl ? (
+                        <img src={test.imageUrl} alt={test.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center font-bold text-xs bg-muted text-muted-foreground">
+                          {test.name[0]}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-sm">{test.name}</h4>
+                      <p className="text-xs text-muted-foreground">{test.role || "Verified Buyer"}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Trending */}
       <div className="container mx-auto px-4">
         <ProductSection
@@ -368,6 +510,23 @@ export default function Home() {
           />
         </div>
       </section>
+
+      {/* Recently Viewed */}
+      {recentlyViewed.length > 0 && (
+        <section className="py-16 border-t">
+          <div className="container mx-auto px-4">
+            <div className="mb-10">
+              <h2 className="text-2xl md:text-3xl font-serif font-bold">Recently Viewed</h2>
+              <p className="text-muted-foreground mt-1">Pick up where you left off</p>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+              {recentlyViewed.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </AppLayout>
   );
 }

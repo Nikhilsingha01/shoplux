@@ -10,6 +10,9 @@ import wishlistRouter from "./wishlist";
 import couponsRouter from "./coupons";
 import adminRouter from "./admin";
 import supportRouter from "./support";
+import reviewsRouter from "./reviews";
+import flashSalesRouter from "./flash-sales";
+import testimonialsRouter from "./testimonials";
 
 const router: IRouter = Router();
 
@@ -24,6 +27,9 @@ router.use(wishlistRouter);
 router.use(couponsRouter);
 router.use(adminRouter);
 router.use(supportRouter);
+router.use(reviewsRouter);
+router.use(flashSalesRouter);
+router.use(testimonialsRouter);
 
 export default router;
 

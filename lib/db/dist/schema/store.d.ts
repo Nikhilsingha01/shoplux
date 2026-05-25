@@ -854,6 +854,23 @@ export declare const appUsersTable: import("drizzle-orm/pg-core").PgTableWithCol
             identity: undefined;
             generated: undefined;
         }, {}, {}>;
+        loyaltyPoints: import("drizzle-orm/pg-core").PgColumn<{
+            name: "loyalty_points";
+            tableName: "app_users";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
         createdAt: import("drizzle-orm/pg-core").PgColumn<{
             name: "created_at";
             tableName: "app_users";
@@ -880,6 +897,7 @@ export declare const insertAppUserSchema: z.ZodObject<{
     email: z.ZodString;
     clerkUserId: z.ZodString;
     isAdmin: z.ZodOptional<z.ZodBoolean>;
+    loyaltyPoints: z.ZodOptional<z.ZodInt>;
 }, {
     out: {};
     in: {};

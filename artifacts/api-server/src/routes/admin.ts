@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { desc, sql, eq, and, or, isNull } from "drizzle-orm";
-import { db, adminSettingsTable, ordersTable, productsTable, appUsersTable } from "@workspace/db";
+import { db, adminSettingsTable, ordersTable, productsTable, appUsersTable, categoriesTable } from "@workspace/db";
 import { UpdateAdminSettingsBody, ListUsersQueryParams } from "@workspace/api-zod";
 import { requireAdmin, requireAuth } from "../middlewares/auth";
 import multer from "multer";
@@ -252,6 +252,147 @@ router.get("/admin/debug-emails", requireAdmin, async (req, res): Promise<void> 
   } catch (err: any) {
     res.status(500).json({ error: err?.message || "Failed to read debug emails log" });
   }
+});
+
+function parseCSVLine(line: string) {
+  const result = [];
+  let current = "";
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      result.push(current);
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  result.push(current);
+  
+  return result.map(v => v.replace(/^"|"$/g, '').trim());
+}
+
+function parseCSV(csvText: string) {
+  const lines = csvText.split(/\r?\n/);
+  if (lines.length < 2) return { headers: [], rows: [] };
+  
+  const headers = parseCSVLine(lines[0]);
+  const rows = [];
+  
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    const values = parseCSVLine(line);
+    
+    const rowObj: Record<string, string> = {};
+    headers.forEach((header, index) => {
+      rowObj[header.trim().toLowerCase()] = values[index] ? values[index].trim() : "";
+    });
+    rows.push(rowObj);
+  }
+  
+  return { headers, rows };
+}
+
+// POST /admin/products/bulk-import (CSV Uploader)
+router.post("/admin/products/bulk-import", requireAdmin, upload.single("file"), async (req, res): Promise<void> => {
+  if (!req.file) {
+    res.status(400).json({ error: "No CSV file uploaded." });
+    return;
+  }
+
+  const csvText = req.file.buffer.toString("utf-8");
+  const { rows } = parseCSV(csvText);
+
+  if (rows.length === 0) {
+    res.status(400).json({ error: "CSV file is empty or missing data rows." });
+    return;
+  }
+
+  const results = [];
+  let successCount = 0;
+  let errorCount = 0;
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const name = row.name || row.title || "";
+    const priceStr = row.price || "";
+    const stockStr = row.stock || row.quantity || "0";
+    const description = row.description || row.desc || "";
+    const comparePriceStr = row.compareprice || row.compare_price || "";
+    const categoryName = row.category || "";
+    const imagesStr = row.images || row.image || "";
+
+    const rowNum = i + 2; // Row number in CSV file (1-indexed header + 1-indexed loop)
+
+    if (!name) {
+      results.push({ row: rowNum, name: "Unknown", status: "error", error: "Product name is missing." });
+      errorCount++;
+      continue;
+    }
+
+    const price = parseFloat(priceStr);
+    if (isNaN(price)) {
+      results.push({ row: rowNum, name, status: "error", error: `Invalid price value: '${priceStr}'` });
+      errorCount++;
+      continue;
+    }
+
+    try {
+      // Find or create category
+      let categoryId: number | null = null;
+      if (categoryName) {
+        const catSlug = categoryName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+        const catList = await db.select().from(categoriesTable).where(eq(categoriesTable.slug, catSlug)).limit(1);
+        if (catList[0]) {
+          categoryId = catList[0].id;
+        } else {
+          // Auto-create category
+          const [newCat] = await db
+            .insert(categoriesTable)
+            .values({ name: categoryName, slug: catSlug })
+            .returning();
+          categoryId = newCat.id;
+        }
+      }
+
+      // Generate slug and parse images
+      const baseSlug = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+      const finalSlug = `${baseSlug}-${Math.floor(Math.random() * 90000) + 10000}`;
+      const images = imagesStr ? imagesStr.split(",").map((url) => url.trim()).filter((url) => url.length > 0) : [];
+      const stock = parseInt(stockStr, 10) || 0;
+      const comparePrice = comparePriceStr ? String(parseFloat(comparePriceStr)) : null;
+
+      // Insert product
+      await db
+        .insert(productsTable)
+        .values({
+          name,
+          slug: finalSlug,
+          price: String(price),
+          comparePrice: comparePrice || undefined as any,
+          description,
+          stock,
+          categoryId,
+          images,
+        });
+
+      results.push({ row: rowNum, name, status: "success" });
+      successCount++;
+    } catch (err: any) {
+      results.push({ row: rowNum, name, status: "error", error: err.message || "Failed to save product." });
+      errorCount++;
+    }
+  }
+
+  res.json({
+    successCount,
+    errorCount,
+    results,
+  });
 });
 
 export default router;

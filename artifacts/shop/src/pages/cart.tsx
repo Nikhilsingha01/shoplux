@@ -5,12 +5,19 @@ import { Link } from "wouter";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@clerk/react";
 import { useAdminStatus } from "@/lib/useAdmin";
+import { useListProducts } from "@workspace/api-client-react";
+import { ProductCard } from "@/components/ProductCard";
 
 export default function Cart() {
   const { items, updateQuantity, removeItem, getSubtotal } = useCart();
   const { isSignedIn } = useAuth();
   const { deliveryCharge: globalDeliveryCharge, freeDeliveryAbove } = useAdminStatus();
   const subtotal = getSubtotal();
+
+  const { data: recommendedData } = useListProducts({ limit: 8 });
+  const recommendedProducts = recommendedData?.products
+    ? recommendedData.products.filter(p => !items.some(item => item.productId === p.id))
+    : [];
 
   // Sum of per-product delivery charges for products that have it enabled
   const perProductDeliveryTotal = items.reduce((sum, item) => {
@@ -127,6 +134,17 @@ export default function Cart() {
                   <p className="text-xs text-center text-muted-foreground">You need an account to place an order.</p>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {items.length > 0 && recommendedProducts.length > 0 && (
+          <div className="mt-16 border-t pt-12">
+            <h3 className="text-2xl font-serif font-bold mb-8">Frequently Bought Together</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {recommendedProducts.slice(0, 4).map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
             </div>
           </div>
         )}

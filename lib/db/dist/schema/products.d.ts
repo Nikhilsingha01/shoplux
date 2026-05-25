@@ -532,6 +532,23 @@ export declare const productsTable: import("drizzle-orm/pg-core").PgTableWithCol
             identity: undefined;
             generated: undefined;
         }, {}, {}>;
+        flashSaleId: import("drizzle-orm/pg-core").PgColumn<{
+            name: "flash_sale_id";
+            tableName: "products";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
         createdAt: import("drizzle-orm/pg-core").PgColumn<{
             name: "created_at";
             tableName: "products";
@@ -590,6 +607,7 @@ export declare const insertProductSchema: z.ZodObject<{
     deliveryCharge: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     isDeliveryChargeApplicable: z.ZodOptional<z.ZodNullable<z.ZodBoolean>>;
     isDeleted: z.ZodOptional<z.ZodBoolean>;
+    flashSaleId: z.ZodOptional<z.ZodNullable<z.ZodInt>>;
 }, {
     out: {};
     in: {};

@@ -152,11 +152,18 @@ export default function Checkout() {
   } | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
 
+  const [redeemLoyaltyPoints, setRedeemLoyaltyPoints] = useState(false);
+
   const { data: addresses } = useListAddresses();
   const createOrderMutation = useCreateOrder();
   const createPaymentOrderMutation = useCreatePaymentOrder();
   const verifyPaymentMutation = useVerifyPayment();
   const validateCouponMutation = useValidateCoupon();
+
+  const userLoyaltyPoints = (me?.user as any)?.loyaltyPoints ?? 0;
+  const loyaltyPointsDiscount = redeemLoyaltyPoints && userLoyaltyPoints >= 100
+    ? Math.floor(userLoyaltyPoints / 100) * 10
+    : 0;
 
   // Pre-select default address
   useEffect(() => {
@@ -177,7 +184,7 @@ export default function Checkout() {
       : appliedCoupon.discount
     : 0;
 
-  const total = Math.max(0, subtotal + deliveryCharge - couponDiscount);
+  const total = Math.max(0, subtotal + deliveryCharge - couponDiscount - loyaltyPointsDiscount);
 
   const handleApplyCoupon = useCallback(() => {
     if (!couponCode.trim()) return;
@@ -236,11 +243,12 @@ export default function Checkout() {
       deliveryCharge,
       discount: couponDiscount,
       couponCode: appliedCoupon?.code ?? undefined,
+      redeemPoints: redeemLoyaltyPoints,
     };
 
     if (paymentMethod === "cod") {
       createOrderMutation.mutate(
-        { data: orderInput },
+        { data: orderInput as any },
         {
           onSuccess: (order) => {
             clearCart();
@@ -299,7 +307,7 @@ export default function Checkout() {
             handler: (response: RazorpaySuccessResponse) => {
               // Payment captured — create order in DB, then verify
               createOrderMutation.mutate(
-                { data: { ...orderInput, razorpayOrderId: paymentOrder.id } },
+                { data: { ...orderInput, razorpayOrderId: paymentOrder.id } as any },
                 {
                   onSuccess: (order) => {
                     verifyPaymentMutation.mutate(
@@ -392,7 +400,7 @@ export default function Checkout() {
     };
 
     createOrderMutation.mutate(
-      { data: { ...mockOrderInput, razorpayOrderId: mockPaymentOrderData.id } },
+      { data: { ...mockOrderInput, razorpayOrderId: mockPaymentOrderData.id } as any },
       {
         onSuccess: (order) => {
           verifyPaymentMutation.mutate(
@@ -707,6 +715,37 @@ export default function Checkout() {
                   ))}
                 </div>
 
+                {/* Loyalty Points Section */}
+                {userLoyaltyPoints >= 100 ? (
+                  <div className="border-t pt-4 pb-1 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="redeemPoints"
+                          checked={redeemLoyaltyPoints}
+                          onChange={(e) => setRedeemLoyaltyPoints(e.target.checked)}
+                          className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer accent-primary"
+                        />
+                        <label htmlFor="redeemPoints" className="text-sm font-medium text-foreground cursor-pointer select-none">
+                          Redeem Loyalty Points
+                        </label>
+                      </div>
+                      <span className="text-xs font-semibold px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                        {userLoyaltyPoints} pts
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground pl-6">
+                      Use {Math.floor(userLoyaltyPoints / 100) * 100} points for a discount of ₹{Math.floor(userLoyaltyPoints / 100) * 10}.
+                    </p>
+                  </div>
+                ) : userLoyaltyPoints > 0 ? (
+                  <div className="border-t pt-4 pb-1 text-xs text-muted-foreground flex justify-between">
+                    <span>Loyalty Points Balance</span>
+                    <span className="font-semibold">{userLoyaltyPoints} pts <span className="text-[10px] text-muted-foreground font-normal">(Min 100 to redeem)</span></span>
+                  </div>
+                ) : null}
+
                 {/* Breakdown */}
                 <div className="space-y-3 text-sm border-t pt-4">
                   <div className="flex justify-between">
@@ -728,6 +767,12 @@ export default function Checkout() {
                     <div className="flex justify-between text-green-600">
                       <span>Coupon ({appliedCoupon?.code})</span>
                       <span>−₹{couponDiscount.toLocaleString("en-IN")}</span>
+                    </div>
+                  )}
+                  {loyaltyPointsDiscount > 0 && (
+                    <div className="flex justify-between text-green-600 font-medium">
+                      <span>Loyalty Points Discount</span>
+                      <span>−₹{loyaltyPointsDiscount.toLocaleString("en-IN")}</span>
                     </div>
                   )}
                   <div className="flex justify-between border-t pt-3 text-base">
@@ -762,6 +807,22 @@ export default function Checkout() {
                 <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground pt-1">
                   <ShieldCheck className="w-3.5 h-3.5" />
                   <span>100% secure checkout • Powered by Razorpay</span>
+                </div>
+
+                {/* Checkout Trust Badges */}
+                <div className="border-t pt-4 mt-4 space-y-3">
+                  <div className="flex items-start gap-2.5 text-xs text-muted-foreground">
+                    <ShieldCheck className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span>{me?.trustBadge1 ?? "Free delivery on orders above ₹999"}</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 text-xs text-muted-foreground">
+                    <CreditCard className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span>{me?.trustBadge2 ?? "Secure & encrypted payments"}</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 text-xs text-muted-foreground">
+                    <AlertCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span>{me?.trustBadge3 ?? "7-day hassle-free returns"}</span>
+                  </div>
                 </div>
               </div>
             </div>

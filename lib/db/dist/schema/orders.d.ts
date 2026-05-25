@@ -503,6 +503,40 @@ export declare const ordersTable: import("drizzle-orm/pg-core").PgTableWithColum
             identity: undefined;
             generated: undefined;
         }, {}, {}>;
+        loyaltyPointsRedeemed: import("drizzle-orm/pg-core").PgColumn<{
+            name: "loyalty_points_redeemed";
+            tableName: "orders";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        loyaltyPointsDiscount: import("drizzle-orm/pg-core").PgColumn<{
+            name: "loyalty_points_discount";
+            tableName: "orders";
+            dataType: "string";
+            columnType: "PgNumeric";
+            data: string;
+            driverParam: string;
+            notNull: false;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
         createdAt: import("drizzle-orm/pg-core").PgColumn<{
             name: "created_at";
             tableName: "orders";
@@ -556,6 +590,8 @@ export declare const insertOrderSchema: z.ZodObject<{
     customerName: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     customerEmail: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     customerPhone: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    loyaltyPointsRedeemed: z.ZodOptional<z.ZodNullable<z.ZodInt>>;
+    loyaltyPointsDiscount: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, {
     out: {};
     in: {};

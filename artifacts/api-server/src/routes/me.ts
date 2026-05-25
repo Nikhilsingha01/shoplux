@@ -20,6 +20,7 @@ router.get("/me", async (req, res): Promise<void> => {
         isAdmin: false,
         isSignedIn: false,
         storeName: settings?.storeName ?? "ShopLux",
+        whatsappNumber: settings?.whatsappNumber ?? "",
         deliveryCharge: settings?.deliveryCharge != null ? Number(settings.deliveryCharge) : 49,
         freeDeliveryAbove: settings?.freeDeliveryAbove != null ? Number(settings.freeDeliveryAbove) : 999,
         trustBadge1: settings?.trustBadge1 ?? "Free delivery on orders above ₹999",
@@ -88,6 +89,7 @@ router.get("/me", async (req, res): Promise<void> => {
       clerkUserId: userId,
       user: currentUser,
       storeName: settings?.storeName ?? "ShopLux",
+      whatsappNumber: settings?.whatsappNumber ?? "",
       deliveryCharge:
         settings?.deliveryCharge != null
           ? Number(settings.deliveryCharge)

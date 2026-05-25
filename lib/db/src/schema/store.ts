@@ -77,6 +77,7 @@ export const appUsersTable = pgTable("app_users", {
   fullName: text("full_name"),
   phone: text("phone"),
   isAdmin: boolean("is_admin").notNull().default(false),
+  loyaltyPoints: integer("loyalty_points").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

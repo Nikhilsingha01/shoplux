@@ -16,6 +16,10 @@ import {
   ArrowLeftRight,
   MessageCircle,
   Mail,
+  Upload,
+  Star,
+  Zap,
+  MessageSquareQuote,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +32,10 @@ const navItems = [
   { href: "/admin/categories", label: "Categories", icon: Tag },
   { href: "/admin/banners", label: "Banners", icon: Image },
   { href: "/admin/coupons", label: "Coupons", icon: Ticket },
+  { href: "/admin/flash-sales", label: "Flash Sales", icon: Zap },
+  { href: "/admin/reviews", label: "Reviews Moderator", icon: Star },
+  { href: "/admin/testimonials", label: "Testimonials", icon: MessageSquareQuote },
+  { href: "/admin/import", label: "Bulk Importer", icon: Upload },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/emails", label: "Sent Emails", icon: Mail },
   { href: "/admin/support", label: "Support", icon: MessageCircle },

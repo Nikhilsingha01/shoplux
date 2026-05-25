@@ -15,7 +15,8 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductCard } from "@/components/ProductCard";
 import { Heart, Plus, Minus, Star, Truck, ShieldCheck, RefreshCcw, Share2 } from "lucide-react";
-import { useUser } from "@clerk/react";
+import { useUser, useAuth } from "@clerk/react";
+import { useQuery } from "@tanstack/react-query";
 
 function parseDescription(descText: string) {
   if (!descText) return { paragraphs: [], highlights: [], specs: [] };
@@ -69,10 +70,82 @@ export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const productId = parseInt(id || "0", 10);
   const { user } = useUser();
+  const { getToken } = useAuth();
   const addItem = useCart((state) => state.addItem);
   const { trustBadge1, trustBadge2, trustBadge3 } = useAdminStatus();
 
+  // Review states
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  // Fetch product reviews
+  const { data: reviews = [], refetch: refetchReviews } = useQuery({
+    queryKey: ["product-reviews", productId],
+    queryFn: async () => {
+      const res = await fetch(`/api/products/${productId}/reviews`);
+      if (!res.ok) return [];
+      return res.json();
+    }
+  });
+
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error("Please sign in to leave a review.");
+      return;
+    }
+    if (!reviewText.trim()) {
+      toast.error("Review text cannot be empty.");
+      return;
+    }
+
+    setIsSubmittingReview(true);
+    try {
+      const token = await getToken();
+      const res = await fetch(`/api/products/${productId}/reviews`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          rating: reviewRating,
+          reviewText: reviewText.trim(),
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to submit review");
+      }
+
+      toast.success("Review submitted successfully!");
+      setReviewText("");
+      refetchReviews();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to submit review");
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
   const { data: product, isLoading } = useGetProduct(productId);
+  const [recentlyViewed, setRecentlyViewed] = useState<any[]>([]);
+
+  // Track recently viewed products
+  useEffect(() => {
+    if (!product) return;
+    try {
+      const items = JSON.parse(localStorage.getItem("recently_viewed") || "[]");
+      const filtered = items.filter((item: any) => item.id !== product.id);
+      const updated = [product, ...filtered].slice(0, 10);
+      localStorage.setItem("recently_viewed", JSON.stringify(updated));
+      setRecentlyViewed(filtered.slice(0, 4));
+    } catch (e) {
+      console.error("Failed to update recently viewed:", e);
+    }
+  }, [product]);
 
   const { data: recommendedData } = useListProducts(
     { category: product?.categoryName ?? undefined, limit: 5 },
@@ -303,21 +376,24 @@ export default function ProductDetail() {
 
             <h1 className="text-3xl md:text-4xl font-serif font-bold mb-3 leading-tight">{product.name}</h1>
 
-            {product.rating != null && (
-              <div className="flex items-center gap-2 mb-4">
-                <div className="flex">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-4 h-4 ${i < Math.round(product.rating!) ? "text-amber-400 fill-amber-400" : "text-muted-foreground"}`}
-                    />
-                  ))}
+            {(() => {
+              const ratingVal = product.rating ? Number(product.rating) : 0;
+              return ratingVal > 0 ? (
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="flex text-amber-500">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-4 h-4 ${i < Math.round(ratingVal) ? "fill-current" : "text-muted-foreground/30"}`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs md:text-sm text-muted-foreground font-medium">
+                    {ratingVal.toFixed(1)} ({product.reviewCount ?? 0} reviews)
+                  </span>
                 </div>
-                <span className="text-sm text-muted-foreground">
-                  {product.rating.toFixed(1)} ({(product.reviewCount ?? 0).toLocaleString()} reviews)
-                </span>
-              </div>
-            )}
+              ) : null;
+            })()}
 
             <div className="flex items-baseline gap-4 mb-6">
               <span className="text-3xl font-bold">₹{product.price.toLocaleString("en-IN")}</span>
@@ -526,9 +602,117 @@ export default function ProductDetail() {
           </div>
         </div>
 
+        {/* Reviews Section */}
+        <section className="py-12 border-t mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            {/* Reviews Summary */}
+            <div className="space-y-6">
+              <h2 className="text-xl font-bold uppercase tracking-wider">Customer Reviews</h2>
+              {(() => {
+                const ratingVal = product.rating ? Number(product.rating) : 0;
+                return (
+                  <div className="flex items-center gap-4 bg-muted/20 p-6 border rounded-sm">
+                    <div className="text-center space-y-1">
+                      <span className="text-4xl font-extrabold">{ratingVal > 0 ? ratingVal.toFixed(1) : "0.0"}</span>
+                      <p className="text-[9px] uppercase font-bold text-muted-foreground">Out of 5</p>
+                    </div>
+                    <div className="space-y-1.5 flex-1 pl-4 border-l">
+                      <div className="flex text-amber-500">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(ratingVal) ? "fill-current" : "text-muted-foreground/30"}`} />
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground">{reviews.length} reviews</p>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Review Submission Form */}
+              {user ? (
+                <form onSubmit={handleReviewSubmit} className="space-y-4 border p-6 rounded-sm bg-background">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider">Leave a Review</h3>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase">Rating</label>
+                    <div className="flex gap-1.5 text-amber-500">
+                      {Array.from({ length: 5 }).map((_, i) => {
+                        const starIdx = i + 1;
+                        return (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => setReviewRating(starIdx)}
+                            className="p-1 hover:scale-110 transition-transform cursor-pointer"
+                          >
+                            <Star className={`w-5 h-5 ${starIdx <= reviewRating ? "fill-current" : "text-muted-foreground/30"}`} />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase">Your review</label>
+                    <textarea
+                      placeholder="Share your experience with this product..."
+                      value={reviewText}
+                      onChange={(e) => setReviewText(e.target.value)}
+                      rows={4}
+                      className="w-full bg-muted/40 border border-border p-3 text-sm focus:outline-none focus:border-primary rounded-none"
+                    />
+                  </div>
+                  <Button type="submit" disabled={isSubmittingReview} className="w-full rounded-none h-11 text-xs tracking-wider uppercase font-medium">
+                    {isSubmittingReview ? "Submitting..." : "Submit Review"}
+                  </Button>
+                </form>
+              ) : (
+                <div className="border border-dashed p-6 text-center bg-muted/5">
+                  <p className="text-xs text-muted-foreground mb-3 font-medium">Please sign in to write a product review.</p>
+                  <Link href="/sign-in">
+                    <Button size="sm" variant="outline" className="text-xs rounded-none font-medium tracking-wide uppercase">Sign In</Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Reviews List */}
+            <div className="md:col-span-2 space-y-6">
+              <h2 className="text-xl font-bold uppercase tracking-wider">Reviews ({reviews.length})</h2>
+              {reviews.length === 0 ? (
+                <div className="border border-dashed p-12 text-center text-muted-foreground text-xs font-medium">
+                  No reviews yet for this product. Be the first to share your thoughts!
+                </div>
+              ) : (
+                <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin">
+                  {reviews.map((rev: any) => (
+                    <div key={rev.id} className="border-b pb-6 last:border-none space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <div className="flex text-amber-500">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star key={i} className={`w-3.5 h-3.5 ${i < rev.rating ? "fill-current" : "text-muted-foreground/30"}`} />
+                            ))}
+                          </div>
+                          <span className="font-semibold text-xs md:text-sm">{rev.customerName}</span>
+                          <span className="bg-emerald-500/10 text-emerald-600 text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                            ✓ Verified Purchase
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-medium">
+                          {new Date(rev.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-muted-foreground text-xs md:text-sm leading-relaxed">{rev.reviewText}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
         {/* Recommended */}
         {recommendedData?.products && recommendedData.products.filter((p) => p.id !== product.id).length > 0 && (
-          <section className="py-12 border-t">
+          <section className="py-12 border-t mt-12">
             <h2 className="text-2xl font-serif font-bold mb-8">You May Also Like</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
               {recommendedData.products
@@ -537,6 +721,18 @@ export default function ProductDetail() {
                 .map((p) => (
                   <ProductCard key={p.id} product={p} />
                 ))}
+            </div>
+          </section>
+        )}
+
+        {/* Recently Viewed */}
+        {recentlyViewed.length > 0 && (
+          <section className="py-12 border-t mt-12">
+            <h2 className="text-2xl font-serif font-bold mb-8">Recently Viewed</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+              {recentlyViewed.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
             </div>
           </section>
         )}

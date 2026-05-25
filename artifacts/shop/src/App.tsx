@@ -98,6 +98,10 @@ import AdminSettings from "@/pages/admin/settings";
 import AdminUsers from "@/pages/admin/users";
 import AdminSupport from "@/pages/admin/support";
 import AdminEmails from "@/pages/admin/emails";
+import AdminTestimonials from "@/pages/admin/testimonials";
+import AdminReviews from "@/pages/admin/reviews";
+import AdminFlashSales from "@/pages/admin/flash-sales";
+import AdminImport from "@/pages/admin/import";
 import Support from "@/pages/support";
 
 function SignInPage() {
@@ -252,7 +256,10 @@ function ClerkProviderWithRoutes() {
           <Route path="/admin/categories" component={AdminCategories} />
           <Route path="/admin/banners" component={AdminBanners} />
           <Route path="/admin/coupons" component={AdminCoupons} />
-          <Route path="/admin/settings" component={AdminSettings} />
+          <Route path="/admin/flash-sales" component={AdminFlashSales} />
+          <Route path="/admin/reviews" component={AdminReviews} />
+          <Route path="/admin/testimonials" component={AdminTestimonials} />
+          <Route path="/admin/import" component={AdminImport} />
           <Route path="/admin/users" component={AdminUsers} />
           <Route path="/admin/emails" component={AdminEmails} />
           <Route path="/admin/support" component={AdminSupport} />

@@ -7,6 +7,7 @@ interface MeResponse {
   clerkUserId?: string;
   user?: Record<string, unknown> | null;
   storeName?: string;
+  whatsappNumber?: string;
   deliveryCharge?: number;
   freeDeliveryAbove?: number;
   trustBadge1?: string;
@@ -37,6 +38,7 @@ export function useAdminStatus() {
     isAdmin: data?.isAdmin ?? false,
     isLoading,
     storeName: data?.storeName ?? "ShopLux",
+    whatsappNumber: data?.whatsappNumber ?? "",
     deliveryCharge: data?.deliveryCharge ?? 49,
     freeDeliveryAbove: data?.freeDeliveryAbove ?? 999,
     trustBadge1: data?.trustBadge1 ?? "Free delivery on orders above ₹999",
