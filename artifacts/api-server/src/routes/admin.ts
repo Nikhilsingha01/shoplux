@@ -53,7 +53,7 @@ router.get("/admin/stats", requireAdmin, async (req, res): Promise<void> => {
   const [revenueResult, ordersResult, productsResult, usersResult, pendingResult] = await Promise.all([
     db.select({ total: sql<number>`sum(cast(total_amount as numeric))` }).from(ordersTable).where(and(eq(ordersTable.paymentStatus, "paid"), dateFilter)),
     db.select({ count: sql<number>`count(*)` }).from(ordersTable).where(dateFilter),
-    db.select({ count: sql<number>`count(*)` }).from(productsTable),
+    db.select({ count: sql<number>`count(*)` }).from(productsTable).where(eq(productsTable.isDeleted, false)),
     db.select({ count: sql<number>`count(*)` }).from(appUsersTable).where(userDateFilter),
     db.select({ count: sql<number>`count(*)` }).from(ordersTable).where(and(eq(ordersTable.status, "pending"), dateFilter)),
   ]);

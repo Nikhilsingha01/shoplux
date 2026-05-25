@@ -87,6 +87,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   const handleShare = async () => {
     if (!product) return;
@@ -224,12 +225,12 @@ export default function ProductDetail() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-24">
           {/* Images */}
           <div className="space-y-4">
-            <div className="aspect-[4/5] bg-muted relative overflow-hidden group">
+            <div className="w-full h-[300px] md:h-[450px] bg-muted relative overflow-hidden group flex items-center justify-center rounded-sm">
               {product.images[activeImage] ? (
                 <img
                   src={product.images[activeImage]}
                   alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="max-w-full max-h-full w-auto h-auto object-contain transition-transform duration-700 group-hover:scale-105"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground">No image</div>
@@ -297,88 +298,104 @@ export default function ProductDetail() {
               ) : null}
             </div>
 
-            {product.description && (() => {
-              const isHTML = /<[a-z][\s\S]*>/i.test(product.description);
-              if (isHTML) {
-                return (
-                  <div className="space-y-4 mb-8 border-t border-border pt-6 mt-2">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-foreground mb-3">Product Description</h4>
-                    <div 
-                      className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground leading-relaxed [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5" 
-                      dangerouslySetInnerHTML={{ __html: product.description }} 
-                    />
-                  </div>
-                );
-              }
+            {product.description && (
+              <div className="relative mt-2 border-t border-border pt-6 mb-8">
+                <div className={`transition-all duration-300 overflow-hidden relative ${isDescriptionExpanded ? "max-h-[2000px]" : "max-h-[140px]"}`}>
+                  {(() => {
+                    const isHTML = /<[a-z][\s\S]*>/i.test(product.description);
+                    if (isHTML) {
+                      return (
+                        <div className="space-y-4 pb-4">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-foreground mb-3">Product Description</h4>
+                          <div 
+                            className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground leading-relaxed [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5" 
+                            dangerouslySetInnerHTML={{ __html: product.description }} 
+                          />
+                        </div>
+                      );
+                    }
 
-              const { paragraphs, highlights, specs } = parseDescription(product.description);
-              const hasContent = paragraphs.length > 0 || highlights.length > 0 || specs.length > 0;
-              if (!hasContent) {
-                return (
-                  <p className="text-muted-foreground leading-relaxed mb-8 text-sm md:text-base">
-                    {product.description}
-                  </p>
-                );
-              }
-              return (
-                <div className="space-y-6 mb-8 border-t border-border pt-6 mt-2">
-                  {/* Narrative paragraphs */}
-                  {paragraphs.length > 0 && (
-                    <div className="space-y-3">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Product Description</h4>
-                      {paragraphs.map((para, i) => (
-                        <p key={i} className="text-muted-foreground leading-relaxed text-sm">
-                          {para}
+                    const { paragraphs, highlights, specs } = parseDescription(product.description);
+                    const hasContent = paragraphs.length > 0 || highlights.length > 0 || specs.length > 0;
+                    if (!hasContent) {
+                      return (
+                        <p className="text-muted-foreground leading-relaxed text-sm pb-4">
+                          {product.description}
                         </p>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Highlights/Features */}
-                  {highlights.length > 0 && (
-                    <div className="space-y-3 pt-2">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Product Highlights</h4>
-                      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 list-none pl-0">
-                        {highlights.map((highlight, i) => (
-                          <li key={i} className="text-muted-foreground text-xs flex items-start gap-2">
-                            <span className="text-primary mt-1.5 h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
-                            <span>{highlight}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Specifications Table */}
-                  {specs.length > 0 && (
-                    <div className="space-y-3 pt-2">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Specifications</h4>
-                      <div className="border border-border/80 overflow-hidden rounded-none shadow-sm">
-                        <table className="w-full text-xs text-left border-collapse">
-                          <tbody>
-                            {specs.map((spec, i) => (
-                              <tr 
-                                key={i} 
-                                className={`border-b border-border/60 last:border-none transition-colors ${
-                                  i % 2 === 0 ? "bg-muted/30" : "bg-background"
-                                }`}
-                              >
-                                <td className="px-4 py-3 font-semibold text-muted-foreground uppercase tracking-wider w-1/3 bg-muted/10 border-r border-border/40 select-none">
-                                  {spec.key}
-                                </td>
-                                <td className="px-4 py-3 font-medium text-foreground w-2/3">
-                                  {spec.value}
-                                </td>
-                              </tr>
+                      );
+                    }
+                    return (
+                      <div className="space-y-6 pb-4">
+                        {/* Narrative paragraphs */}
+                        {paragraphs.length > 0 && (
+                          <div className="space-y-3">
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Product Description</h4>
+                            {paragraphs.map((para, i) => (
+                              <p key={i} className="text-muted-foreground leading-relaxed text-sm">
+                                {para}
+                              </p>
                             ))}
-                          </tbody>
-                        </table>
+                          </div>
+                        )}
+
+                        {/* Highlights/Features */}
+                        {highlights.length > 0 && (
+                          <div className="space-y-3 pt-2">
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Product Highlights</h4>
+                            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 list-none pl-0">
+                              {highlights.map((highlight, i) => (
+                                <li key={i} className="text-muted-foreground text-xs flex items-start gap-2">
+                                  <span className="text-primary mt-1.5 h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
+                                  <span>{highlight}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Specifications Table */}
+                        {specs.length > 0 && (
+                          <div className="space-y-3 pt-2">
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Specifications</h4>
+                            <div className="border border-border/80 overflow-hidden rounded-none shadow-sm">
+                              <table className="w-full text-xs text-left border-collapse">
+                                <tbody>
+                                  {specs.map((spec, i) => (
+                                    <tr 
+                                      key={i} 
+                                      className={`border-b border-border/60 last:border-none transition-colors ${
+                                        i % 2 === 0 ? "bg-muted/30" : "bg-background"
+                                      }`}
+                                    >
+                                      <td className="px-4 py-3 font-semibold text-muted-foreground uppercase tracking-wider w-1/3 bg-muted/10 border-r border-border/40 select-none">
+                                        {spec.key}
+                                      </td>
+                                      <td className="px-4 py-3 font-medium text-foreground w-2/3">
+                                        {spec.value}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
+                    );
+                  })()}
+                  
+                  {!isDescriptionExpanded && (
+                    <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-background via-background/70 to-transparent pointer-events-none" />
                   )}
                 </div>
-              );
-            })()}
+                <button 
+                  onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)} 
+                  className="text-primary hover:text-primary/80 font-bold text-xs uppercase tracking-wider mt-3 flex items-center gap-1 cursor-pointer border-none bg-transparent"
+                >
+                  {isDescriptionExpanded ? "Show Less" : "Read More"}
+                </button>
+              </div>
+            )}
 
             <div className="space-y-6 mb-8">
               {variantsList.length > 0 && (

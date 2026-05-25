@@ -36,6 +36,7 @@ export const productsTable = pgTable("products", {
   reviewCount: integer("review_count").notNull().default(0),
   deliveryCharge: numeric("delivery_charge", { precision: 10, scale: 2 }).default("0"),
   isDeliveryChargeApplicable: boolean("is_delivery_charge_applicable").default(false),
+  isDeleted: boolean("is_deleted").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

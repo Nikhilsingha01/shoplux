@@ -150,6 +150,7 @@ export default function Checkout() {
     discount: number;
     discountType: string;
   } | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
 
   const { data: addresses } = useListAddresses();
   const createOrderMutation = useCreateOrder();
@@ -180,6 +181,7 @@ export default function Checkout() {
 
   const handleApplyCoupon = useCallback(() => {
     if (!couponCode.trim()) return;
+    setCouponError(null);
     validateCouponMutation.mutate(
       { data: { code: couponCode.trim().toUpperCase(), orderAmount: subtotal } },
       {
@@ -191,9 +193,11 @@ export default function Checkout() {
           });
           toast.success(`Coupon "${coupon.code}" applied`);
           setCouponCode("");
+          setCouponError(null);
         },
-        onError: () => {
-          toast.error("Invalid or expired coupon code");
+        onError: (err: any) => {
+          const errorMsg = err.data?.error || err.message || "Invalid or expired coupon code";
+          setCouponError(errorMsg);
         },
       }
     );
@@ -201,6 +205,7 @@ export default function Checkout() {
 
   const handleRemoveCoupon = useCallback(() => {
     setAppliedCoupon(null);
+    setCouponError(null);
     toast("Coupon removed");
   }, []);
 
@@ -637,27 +642,35 @@ export default function Checkout() {
                       </button>
                     </div>
                   ) : (
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Enter coupon code"
-                        value={couponCode}
-                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                        onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
-                        className="rounded-none font-mono uppercase tracking-wider"
-                        disabled={validateCouponMutation.isPending}
-                      />
-                      <Button
-                        variant="outline"
-                        className="rounded-none px-6 flex-shrink-0"
-                        onClick={handleApplyCoupon}
-                        disabled={!couponCode.trim() || validateCouponMutation.isPending}
-                      >
-                        {validateCouponMutation.isPending ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          "Apply"
-                        )}
-                      </Button>
+                    <div>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Enter coupon code"
+                          value={couponCode}
+                          onChange={(e) => {
+                            setCouponCode(e.target.value.toUpperCase());
+                            if (couponError) setCouponError(null);
+                          }}
+                          onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
+                          className="rounded-none font-mono uppercase tracking-wider"
+                          disabled={validateCouponMutation.isPending}
+                        />
+                        <Button
+                          variant="outline"
+                          className="rounded-none px-6 flex-shrink-0"
+                          onClick={handleApplyCoupon}
+                          disabled={!couponCode.trim() || validateCouponMutation.isPending}
+                        >
+                          {validateCouponMutation.isPending ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            "Apply"
+                          )}
+                        </Button>
+                      </div>
+                      {couponError && (
+                        <p className="text-xs text-destructive mt-1.5 font-medium">{couponError}</p>
+                      )}
                     </div>
                   )}
                 </section>

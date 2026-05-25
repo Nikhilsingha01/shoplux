@@ -36,23 +36,28 @@ router.post("/coupons/validate", requireAuth, async (req, res): Promise<void> =>
     .where(eq(couponsTable.code, code.toUpperCase()))
     .limit(1);
 
-  if (!coupon || !coupon.isActive) {
-    res.status(404).json({ error: "Invalid or expired coupon code" });
+  if (!coupon) {
+    res.status(400).json({ error: "Invalid coupon code" });
+    return;
+  }
+
+  if (!coupon.isActive) {
+    res.status(400).json({ error: "Coupon is not active" });
     return;
   }
 
   if (coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) {
-    res.status(404).json({ error: "Coupon has expired" });
+    res.status(400).json({ error: "Coupon has expired" });
     return;
   }
 
   if (coupon.usageLimit != null && coupon.usedCount >= coupon.usageLimit) {
-    res.status(404).json({ error: "Coupon usage limit reached" });
+    res.status(400).json({ error: "Coupon usage limit reached" });
     return;
   }
 
   if (coupon.minOrderAmount != null && orderAmount != null && Number(orderAmount) < Number(coupon.minOrderAmount)) {
-    res.status(404).json({ error: `Minimum order amount of ₹${coupon.minOrderAmount} required` });
+    res.status(400).json({ error: `Minimum order amount is ₹${Number(coupon.minOrderAmount).toLocaleString("en-IN")}` });
     return;
   }
 

@@ -515,6 +515,23 @@ export declare const productsTable: import("drizzle-orm/pg-core").PgTableWithCol
             identity: undefined;
             generated: undefined;
         }, {}, {}>;
+        isDeleted: import("drizzle-orm/pg-core").PgColumn<{
+            name: "is_deleted";
+            tableName: "products";
+            dataType: "boolean";
+            columnType: "PgBoolean";
+            data: boolean;
+            driverParam: boolean;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
         createdAt: import("drizzle-orm/pg-core").PgColumn<{
             name: "created_at";
             tableName: "products";
@@ -572,6 +589,7 @@ export declare const insertProductSchema: z.ZodObject<{
     reviewCount: z.ZodOptional<z.ZodInt>;
     deliveryCharge: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     isDeliveryChargeApplicable: z.ZodOptional<z.ZodNullable<z.ZodBoolean>>;
+    isDeleted: z.ZodOptional<z.ZodBoolean>;
 }, {
     out: {};
     in: {};
