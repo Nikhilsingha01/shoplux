@@ -11,6 +11,7 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth, requireAdmin } from "../middlewares/auth";
 import { resolveImageUrl } from "../lib/supabase";
+import { logger } from "../lib/logger";
 
 const router = Router();
 
@@ -159,12 +160,21 @@ router.post("/products", requireAdmin, async (req, res): Promise<void> => {
     insertData.deliveryCharge = String((rest as any).deliveryCharge);
   }
 
-  const [product] = await db
-    .insert(productsTable)
-    .values(insertData as any)
-    .returning();
+  try {
+    const [product] = await db
+      .insert(productsTable)
+      .values(insertData as any)
+      .returning();
 
-  res.status(201).json(formatProduct(product as unknown as Record<string, unknown>));
+    res.status(201).json(formatProduct(product as unknown as Record<string, unknown>));
+  } catch (err: any) {
+    logger.error({ err }, "Failed to create product");
+    if (err.code === "23505") {
+      res.status(400).json({ error: "A product with this name or slug already exists." });
+      return;
+    }
+    res.status(500).json({ error: err.message || "Failed to create product due to an internal error." });
+  }
 });
 
 router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
@@ -188,18 +198,27 @@ router.patch("/products/:id", requireAdmin, async (req, res): Promise<void> => {
     updateData.deliveryCharge = String((parsed.data as any).deliveryCharge);
   }
 
-  const [product] = await db
-    .update(productsTable)
-    .set(updateData)
-    .where(eq(productsTable.id, params.data.id))
-    .returning();
+  try {
+    const [product] = await db
+      .update(productsTable)
+      .set(updateData)
+      .where(eq(productsTable.id, params.data.id))
+      .returning();
 
-  if (!product) {
-    res.status(404).json({ error: "Product not found" });
-    return;
+    if (!product) {
+      res.status(404).json({ error: "Product not found" });
+      return;
+    }
+
+    res.json(formatProduct(product as unknown as Record<string, unknown>));
+  } catch (err: any) {
+    logger.error({ err }, "Failed to update product");
+    if (err.code === "23505") {
+      res.status(400).json({ error: "A product with this name or slug already exists." });
+      return;
+    }
+    res.status(500).json({ error: err.message || "Failed to update product." });
   }
-
-  res.json(formatProduct(product as unknown as Record<string, unknown>));
 });
 
 router.delete("/products/:id", requireAdmin, async (req, res): Promise<void> => {
@@ -209,18 +228,23 @@ router.delete("/products/:id", requireAdmin, async (req, res): Promise<void> => 
     return;
   }
 
-  const [product] = await db
-    .update(productsTable)
-    .set({ isDeleted: true })
-    .where(eq(productsTable.id, params.data.id))
-    .returning();
+  try {
+    const [product] = await db
+      .update(productsTable)
+      .set({ isDeleted: true })
+      .where(eq(productsTable.id, params.data.id))
+      .returning();
 
-  if (!product) {
-    res.status(404).json({ error: "Product not found" });
-    return;
+    if (!product) {
+      res.status(404).json({ error: "Product not found" });
+      return;
+    }
+
+    res.sendStatus(204);
+  } catch (err: any) {
+    logger.error({ err }, "Failed to soft-delete product");
+    res.status(500).json({ error: err.message || "Failed to delete product." });
   }
-
-  res.sendStatus(204);
 });
 
 export default router;
