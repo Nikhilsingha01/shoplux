@@ -63,6 +63,74 @@ const router = Router();
     await db.execute(sql`ALTER TABLE admin_settings ADD COLUMN IF NOT EXISTS trust_badge_1 TEXT DEFAULT 'Free delivery on orders above ₹999';`);
     await db.execute(sql`ALTER TABLE admin_settings ADD COLUMN IF NOT EXISTS trust_badge_2 TEXT DEFAULT 'Secure & encrypted payments';`);
     await db.execute(sql`ALTER TABLE admin_settings ADD COLUMN IF NOT EXISTS trust_badge_3 TEXT DEFAULT '7-day hassle-free returns';`);
+
+    // ── Critical: add newer product columns that may be missing in the Replit production DB ──
+    await db.execute(sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN NOT NULL DEFAULT false;`);
+    await db.execute(sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS flash_sale_id INTEGER;`);
+    await db.execute(sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS review_count INTEGER NOT NULL DEFAULT 0;`);
+    await db.execute(sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS rating NUMERIC(3, 2);`);
+    await db.execute(sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS is_featured BOOLEAN NOT NULL DEFAULT false;`);
+    await db.execute(sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS is_trending BOOLEAN NOT NULL DEFAULT false;`);
+    await db.execute(sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS is_new_arrival BOOLEAN NOT NULL DEFAULT false;`);
+    await db.execute(sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS is_best_seller BOOLEAN NOT NULL DEFAULT false;`);
+    await db.execute(sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS compare_price NUMERIC(10, 2);`);
+    await db.execute(sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS discount NUMERIC(5, 2);`);
+    await db.execute(sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW();`);
+
+    // ── Categories table newer columns ──
+    await db.execute(sql`ALTER TABLE categories ADD COLUMN IF NOT EXISTS image TEXT;`);
+    await db.execute(sql`ALTER TABLE categories ADD COLUMN IF NOT EXISTS description TEXT;`);
+
+    // ── Create flash_sales table if missing ──
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS flash_sales (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        discount_percent NUMERIC(5, 2) NOT NULL,
+        start_time TIMESTAMP WITH TIME ZONE NOT NULL,
+        end_time TIMESTAMP WITH TIME ZONE NOT NULL,
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    // ── Create reviews table if missing ──
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS reviews (
+        id SERIAL PRIMARY KEY,
+        product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        user_id TEXT NOT NULL,
+        user_name TEXT NOT NULL,
+        rating INTEGER NOT NULL,
+        comment TEXT,
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    // ── Create testimonials table if missing ──
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS testimonials (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        role TEXT,
+        review_text TEXT NOT NULL,
+        rating INTEGER NOT NULL DEFAULT 5,
+        image_url TEXT,
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    // ── Loyalty points column on app_users ──
+    await db.execute(sql`ALTER TABLE app_users ADD COLUMN IF NOT EXISTS loyalty_points INTEGER NOT NULL DEFAULT 0;`);
+
+    // ── Loyalty / discount columns on orders ──
+    await db.execute(sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS loyalty_discount NUMERIC(10,2) NOT NULL DEFAULT 0;`);
+    await db.execute(sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS redeemed_points INTEGER NOT NULL DEFAULT 0;`);
+
+    // ── WhatsApp number in admin_settings ──
+    await db.execute(sql`ALTER TABLE admin_settings ADD COLUMN IF NOT EXISTS whatsapp_number TEXT;`);
+
     console.log("Database migration for returns table COMPLETED SUCCESSFULLY");
   } catch (err: any) {
     console.error("Database migration for returns table FAILED:", err);
