@@ -263,6 +263,7 @@ function ClerkProviderWithRoutes() {
           <Route path="/admin/users" component={AdminUsers} />
           <Route path="/admin/emails" component={AdminEmails} />
           <Route path="/admin/support" component={AdminSupport} />
+          <Route path="/admin/settings" component={AdminSettings} />
           
            <Route path="/faq" component={FAQ} />
           <Route path="/terms" component={Terms} />

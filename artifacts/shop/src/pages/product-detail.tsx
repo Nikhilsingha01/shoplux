@@ -17,6 +17,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { Heart, Plus, Minus, Star, Truck, ShieldCheck, RefreshCcw, Share2 } from "lucide-react";
 import { useUser, useAuth } from "@clerk/react";
 import { useQuery } from "@tanstack/react-query";
+import { FlashSaleCountdown } from "@/components/FlashSaleCountdown";
 
 function parseDescription(descText: string) {
   if (!descText) return { paragraphs: [], highlights: [], specs: [] };
@@ -89,6 +90,16 @@ export default function ProductDetail() {
     }
   });
 
+  // Fetch active flash sale
+  const { data: flashSaleData } = useQuery({
+    queryKey: ["active-flash-sale"],
+    queryFn: async () => {
+      const res = await fetch("/api/flash-sales/active");
+      if (!res.ok) return null;
+      return res.json();
+    }
+  });
+
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
@@ -131,6 +142,19 @@ export default function ProductDetail() {
   };
 
   const { data: product, isLoading } = useGetProduct(productId);
+
+  const isProductInFlashSale = !!(
+    flashSaleData?.sale &&
+    product &&
+    (product as any).flashSaleId === flashSaleData.sale.id
+  );
+
+  const flashPrice = isProductInFlashSale && product && flashSaleData?.sale
+    ? Number(product.price) * (1 - Number(flashSaleData.sale.discountPercent) / 100)
+    : null;
+
+  const currentPrice = flashPrice !== null ? flashPrice : (product ? Number(product.price) : 0);
+
   const [recentlyViewed, setRecentlyViewed] = useState<any[]>([]);
 
   // Track recently viewed products
@@ -226,7 +250,7 @@ export default function ProductDetail() {
     addItem({
       productId: product.id,
       name: product.name,
-      price: product.price,
+      price: currentPrice,
       image: product.images[0] || "",
       quantity,
       variant: selectedVariant,
@@ -265,6 +289,7 @@ export default function ProductDetail() {
     : [];
 
   const badges = [
+    isProductInFlashSale ? "⚡ Flash Sale Deal" : null,
     product?.isFeatured ? "Featured" : null,
     product?.isTrending ? "Trending" : null,
     product?.isNewArrival ? "New Arrival" : null,
@@ -320,6 +345,22 @@ export default function ProductDetail() {
           <span className="text-foreground truncate max-w-[160px]">{product.name}</span>
         </nav>
 
+        {isProductInFlashSale && flashSaleData?.sale && (
+          <div className="mb-8 p-4 bg-gradient-to-r from-amber-950 via-zinc-900 to-amber-950 border border-amber-500/30 text-white rounded-lg flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl animate-pulse">⚡</span>
+              <div>
+                <p className="font-serif font-bold text-amber-400 text-sm tracking-wider uppercase">Active Flash Sale: {flashSaleData.sale.title}</p>
+                <p className="text-zinc-400 text-xs mt-0.5">This product is discounted by {flashSaleData.sale.discountPercent}% for a limited time!</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">ENDS IN:</span>
+              <FlashSaleCountdown endTime={flashSaleData.sale.endTime} />
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-24">
           {/* Images */}
           <div className="space-y-4">
@@ -341,7 +382,11 @@ export default function ProductDetail() {
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground">No image</div>
               )}
-              {product.discount && product.discount > 0 ? (
+              {isProductInFlashSale && flashSaleData?.sale ? (
+                <div className="absolute top-4 left-4 bg-amber-600 text-white text-xs font-bold px-3 py-1.5 uppercase tracking-wider z-10 shadow-lg flex items-center gap-1 animate-pulse rounded-xs">
+                  <span>⚡</span> Flash Sale -{Math.round(Number(flashSaleData.sale.discountPercent))}%
+                </div>
+              ) : product.discount && product.discount > 0 ? (
                 <div className="absolute top-4 left-4 bg-destructive text-destructive-foreground text-xs font-bold px-2 py-1 uppercase tracking-wider z-10">
                   Save {product.discount}%
                 </div>
@@ -395,17 +440,36 @@ export default function ProductDetail() {
               ) : null;
             })()}
 
-            <div className="flex items-baseline gap-4 mb-6">
-              <span className="text-3xl font-bold">₹{product.price.toLocaleString("en-IN")}</span>
-              {product.comparePrice && product.comparePrice > product.price ? (
-                <>
-                  <span className="text-muted-foreground line-through text-xl">₹{product.comparePrice.toLocaleString("en-IN")}</span>
-                  <span className="text-destructive font-semibold text-sm">
-                    ₹{(product.comparePrice - product.price).toLocaleString("en-IN")} off
+            {isProductInFlashSale && flashSaleData?.sale ? (
+              <div className="space-y-2 mb-6">
+                <div className="flex items-baseline gap-4">
+                  <span className="text-4xl font-black text-amber-600">
+                    ₹{Math.round(currentPrice).toLocaleString("en-IN")}
                   </span>
-                </>
-              ) : null}
-            </div>
+                  <span className="text-muted-foreground line-through text-xl">
+                    ₹{product.price.toLocaleString("en-IN")}
+                  </span>
+                  <span className="text-amber-700 bg-amber-500/10 text-xs font-bold px-2 py-1 rounded">
+                    Flash Discount {flashSaleData.sale.discountPercent}% OFF
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Original Price: ₹{product.price.toLocaleString("en-IN")}. You save ₹{Math.round(product.price - currentPrice).toLocaleString("en-IN")}!
+                </p>
+              </div>
+            ) : (
+              <div className="flex items-baseline gap-4 mb-6">
+                <span className="text-3xl font-bold">₹{product.price.toLocaleString("en-IN")}</span>
+                {product.comparePrice && product.comparePrice > product.price ? (
+                  <>
+                    <span className="text-muted-foreground line-through text-xl">₹{product.comparePrice.toLocaleString("en-IN")}</span>
+                    <span className="text-destructive font-semibold text-sm">
+                      ₹{(product.comparePrice - product.price).toLocaleString("en-IN")} off
+                    </span>
+                  </>
+                ) : null}
+              </div>
+            )}
 
             {product.description && (
               <div className="relative mt-2 border-t border-border pt-6 mb-8">

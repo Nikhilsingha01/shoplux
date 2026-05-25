@@ -272,12 +272,16 @@ const router = Router();
         id SERIAL PRIMARY KEY,
         product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
         user_id TEXT NOT NULL,
-        user_name TEXT NOT NULL,
+        customer_name TEXT NOT NULL,
         rating INTEGER NOT NULL,
-        comment TEXT,
+        review_text TEXT NOT NULL,
         created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
       );
     `);
+    // Add missing columns in case table already existed with old schema
+    await db.execute(sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS customer_name TEXT NOT NULL DEFAULT 'Anonymous';`);
+    await db.execute(sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS review_text TEXT NOT NULL DEFAULT '';`);
+    await db.execute(sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS user_name TEXT;`); // kept for backward compat
 
     // ── Create testimonials table if missing ──
     await db.execute(sql`

@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { eq, and, sql } from "drizzle-orm";
-import { db, reviewsTable, productsTable, ordersTable, orderItemsTable } from "@workspace/db";
+import { db, reviewsTable, productsTable, ordersTable, orderItemsTable, appUsersTable } from "@workspace/db";
 import { requireAuth, requireAdmin } from "../middlewares/auth";
+import { clerkClient } from "@clerk/express";
 import { logger } from "../lib/logger";
 
 const router = Router();
@@ -46,12 +47,30 @@ router.post("/products/:id/reviews", requireAuth, async (req, res): Promise<void
     return;
   }
 
-  const userId = (req as any).user?.clerkUserId;
-  const customerName = (req as any).user?.fullName || (req as any).user?.email || "Anonymous";
-
+  // requireAuth sets req.userId (not req.user)
+  const userId = (req as any).userId as string | undefined;
   if (!userId) {
     res.status(401).json({ error: "Unauthorized" });
     return;
+  }
+
+  // Try to get customer name from app_users table, then fallback to Clerk
+  let customerName = "Anonymous";
+  try {
+    const [appUser] = await db.select().from(appUsersTable).where(eq(appUsersTable.clerkUserId, userId)).limit(1);
+    if (appUser?.fullName) {
+      customerName = appUser.fullName;
+    } else if (appUser?.email) {
+      customerName = appUser.email.split("@")[0];
+    } else {
+      // fallback to Clerk API
+      const clerkUser = await clerkClient.users.getUser(userId).catch(() => null);
+      if (clerkUser) {
+        customerName = `${clerkUser.firstName ?? ""} ${clerkUser.lastName ?? ""}`.trim() || clerkUser.emailAddresses[0]?.emailAddress?.split("@")[0] || "Anonymous";
+      }
+    }
+  } catch (e) {
+    logger.warn({ e }, "Could not resolve customer name for review");
   }
 
   try {

@@ -11,6 +11,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, ShieldCheck, RefreshCcw, Headphones, Truck, Award, Star } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { FlashSaleCountdown } from "@/components/FlashSaleCountdown";
 
 function BannerCarousel() {
   const { data: banners, isLoading } = useListBanners();
@@ -241,50 +242,7 @@ function ProductSection({
   );
 }
 
-function FlashSaleCountdown({ endTime }: { endTime: string }) {
-  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
-  useEffect(() => {
-    const calculateTimeLeft = () => {
-      const difference = +new Date(endTime) - +new Date();
-      let timeLeftObj = { hours: 0, minutes: 0, seconds: 0 };
-
-      if (difference > 0) {
-        timeLeftObj = {
-          hours: Math.floor(difference / (1000 * 60 * 60)),
-          minutes: Math.floor((difference / 1000 / 60) % 60),
-          seconds: Math.floor((difference / 1000) % 60),
-        };
-      }
-      return timeLeftObj;
-    };
-
-    setTimeLeft(calculateTimeLeft());
-    const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [endTime]);
-
-  const padZero = (num: number) => String(num).padStart(2, "0");
-
-  return (
-    <div className="flex gap-2 text-center items-center">
-      <div className="bg-amber-950 text-amber-50 px-2.5 py-1.5 font-mono text-xs md:text-sm font-semibold rounded-xs">
-        {padZero(timeLeft.hours)}h
-      </div>
-      <span className="text-amber-900 font-bold">:</span>
-      <div className="bg-amber-950 text-amber-50 px-2.5 py-1.5 font-mono text-xs md:text-sm font-semibold rounded-xs">
-        {padZero(timeLeft.minutes)}m
-      </div>
-      <span className="text-amber-900 font-bold">:</span>
-      <div className="bg-amber-950 text-amber-50 px-2.5 py-1.5 font-mono text-xs md:text-sm font-semibold rounded-xs">
-        {padZero(timeLeft.seconds)}s
-      </div>
-    </div>
-  );
-}
 
 const trustItems = [
   { icon: ShieldCheck, title: "100% Secure Payment", desc: "Safe & encrypted transactions" },
@@ -357,21 +315,109 @@ export default function Home() {
 
       {/* Flash Sale Banner */}
       {flashSaleData?.sale && (
-        <section className="bg-gradient-to-r from-amber-500/10 via-amber-600/10 to-amber-700/10 border-y border-amber-500/20 py-8">
-          <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="space-y-2 text-center md:text-left">
-              <span className="bg-amber-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">⚡ Active Flash Sale</span>
-              <h3 className="text-2xl md:text-3xl font-serif font-bold text-amber-950">{flashSaleData.sale.title}</h3>
-              <p className="text-sm text-amber-800">Enjoy an extra <span className="font-bold">{flashSaleData.sale.discountPercent}% OFF</span> on selected premium arrivals!</p>
+        <section className="relative overflow-hidden bg-zinc-950 border-y border-amber-500/30 text-white py-12 md:py-16">
+          {/* Glowing background circles for modern premium aesthetics */}
+          <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-72 h-72 rounded-full bg-amber-500/10 blur-[100px] pointer-events-none" />
+          <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-72 h-72 rounded-full bg-red-600/10 blur-[100px] pointer-events-none" />
+          
+          <div className="container mx-auto px-4 relative z-10">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-8 mb-10 pb-8 border-b border-white/10">
+              <div className="space-y-4 text-center lg:text-left max-w-2xl">
+                <div className="inline-flex items-center gap-2 bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider animate-pulse">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                  ⚡ LIVE FLASH SALE
+                </div>
+                <h2 className="text-4xl md:text-5xl font-serif font-black tracking-tight bg-gradient-to-r from-white via-amber-200 to-amber-400 bg-clip-text text-transparent">
+                  {flashSaleData.sale.title}
+                </h2>
+                <p className="text-zinc-400 text-base md:text-lg">
+                  Limited time offer! Grab premium essentials at an exclusive{" "}
+                  <span className="font-extrabold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20">
+                    {flashSaleData.sale.discountPercent}% OFF
+                  </span>{" "}
+                  before they sell out.
+                </p>
+              </div>
+              
+              <div className="flex flex-col items-center lg:items-end gap-4 bg-zinc-900/60 border border-zinc-800/80 p-6 rounded-xl backdrop-blur-md shadow-2xl min-w-[280px]">
+                <span className="text-xs font-bold text-amber-500 uppercase tracking-widest">
+                  DEALS EXPIRE IN
+                </span>
+                <FlashSaleCountdown endTime={flashSaleData.sale.endTime} />
+                <Link href="/products">
+                  <Button className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold mt-2 rounded-sm px-8 h-11 tracking-wider uppercase text-xs shadow-lg shadow-amber-500/10">
+                    View All Deals
+                  </Button>
+                </Link>
+              </div>
             </div>
-            
-            <div className="flex flex-col items-center md:items-end gap-3">
-              <span className="text-[10px] font-semibold text-amber-900 uppercase tracking-widest">Offers Expiring In:</span>
-              <FlashSaleCountdown endTime={flashSaleData.sale.endTime} />
-              <Link href="/products">
-                <Button size="sm" className="bg-amber-700 hover:bg-amber-800 text-white mt-2 rounded-xs px-6">Shop Flash Deals</Button>
-              </Link>
-            </div>
+
+            {/* Flash Sale Products list */}
+            {Array.isArray(flashSaleData.products) && flashSaleData.products.length > 0 && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold tracking-wider text-amber-400 uppercase flex items-center gap-2">
+                    <span>⚡</span> Featured Flash Deals
+                  </h3>
+                  <span className="text-xs text-zinc-400 font-medium">
+                    {flashSaleData.products.length} Items Available
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                  {flashSaleData.products.slice(0, 4).map((product: any) => {
+                    const ratingVal = product.rating ? Number(product.rating) : 0;
+                    return (
+                      <Link
+                        key={product.id}
+                        href={`/products/${product.id}`}
+                        className="group block bg-zinc-900/40 border border-zinc-800/80 hover:border-amber-500/40 rounded-lg p-3 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative"
+                      >
+                        <div className="relative aspect-[4/5] overflow-hidden bg-zinc-950 mb-3 rounded-md border border-zinc-800/50">
+                          {product.images?.[0] ? (
+                            <img
+                              src={product.images[0]}
+                              alt={product.name}
+                              className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-zinc-500 text-sm">
+                              No image
+                            </div>
+                          )}
+                          <div className="absolute top-2 left-2 bg-gradient-to-r from-red-600 to-amber-600 text-white text-[9px] font-bold px-2 py-0.5 uppercase tracking-wider rounded-xs shadow-md">
+                            -{Math.round(product.discount)}%
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-1.5">
+                          <h4 className="font-medium text-sm line-clamp-1 group-hover:text-amber-400 transition-colors text-zinc-100">
+                            {product.name}
+                          </h4>
+                          
+                          {ratingVal > 0 && (
+                            <div className="flex items-center gap-1 text-[11px] text-zinc-400">
+                              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                              <span className="font-semibold text-zinc-200">{ratingVal.toFixed(1)}</span>
+                              <span>({product.reviewCount})</span>
+                            </div>
+                          )}
+
+                          <div className="flex items-baseline gap-2">
+                            <span className="font-extrabold text-sm md:text-base text-amber-400">
+                              ₹{Math.round(product.flashPrice).toLocaleString("en-IN")}
+                            </span>
+                            <span className="text-zinc-500 line-through text-xs">
+                              ₹{Number(product.price).toLocaleString("en-IN")}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </section>
       )}
