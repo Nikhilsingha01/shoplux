@@ -81,39 +81,48 @@ router.get("/products", async (req, res): Promise<void> => {
 });
 
 router.get("/products/featured", async (_req, res): Promise<void> => {
-  const [featured, trending, newArrivals, bestSellers] = await Promise.all([
-    db
-      .select({ product: productsTable, categoryName: categoriesTable.name })
-      .from(productsTable)
-      .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
-      .where(and(eq(productsTable.isFeatured, true), or(eq(productsTable.isDeleted, false), isNull(productsTable.isDeleted))))
-      .limit(8),
-    db
-      .select({ product: productsTable, categoryName: categoriesTable.name })
-      .from(productsTable)
-      .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
-      .where(and(eq(productsTable.isTrending, true), or(eq(productsTable.isDeleted, false), isNull(productsTable.isDeleted))))
-      .limit(8),
-    db
-      .select({ product: productsTable, categoryName: categoriesTable.name })
-      .from(productsTable)
-      .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
-      .where(and(eq(productsTable.isNewArrival, true), or(eq(productsTable.isDeleted, false), isNull(productsTable.isDeleted))))
-      .limit(8),
-    db
-      .select({ product: productsTable, categoryName: categoriesTable.name })
-      .from(productsTable)
-      .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
-      .where(and(eq(productsTable.isBestSeller, true), or(eq(productsTable.isDeleted, false), isNull(productsTable.isDeleted))))
-      .limit(8),
-  ]);
+  try {
+    const [featured, trending, newArrivals, bestSellers] = await Promise.all([
+      db
+        .select({ product: productsTable, categoryName: categoriesTable.name })
+        .from(productsTable)
+        .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
+        .where(and(eq(productsTable.isFeatured, true), or(eq(productsTable.isDeleted, false), isNull(productsTable.isDeleted))))
+        .limit(8),
+      db
+        .select({ product: productsTable, categoryName: categoriesTable.name })
+        .from(productsTable)
+        .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
+        .where(and(eq(productsTable.isTrending, true), or(eq(productsTable.isDeleted, false), isNull(productsTable.isDeleted))))
+        .limit(8),
+      db
+        .select({ product: productsTable, categoryName: categoriesTable.name })
+        .from(productsTable)
+        .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
+        .where(and(eq(productsTable.isNewArrival, true), or(eq(productsTable.isDeleted, false), isNull(productsTable.isDeleted))))
+        .limit(8),
+      db
+        .select({ product: productsTable, categoryName: categoriesTable.name })
+        .from(productsTable)
+        .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
+        .where(and(eq(productsTable.isBestSeller, true), or(eq(productsTable.isDeleted, false), isNull(productsTable.isDeleted))))
+        .limit(8),
+    ]);
 
-  res.json({
-    featured: featured.map((r) => formatProduct(r.product as unknown as Record<string, unknown>, r.categoryName)),
-    trending: trending.map((r) => formatProduct(r.product as unknown as Record<string, unknown>, r.categoryName)),
-    newArrivals: newArrivals.map((r) => formatProduct(r.product as unknown as Record<string, unknown>, r.categoryName)),
-    bestSellers: bestSellers.map((r) => formatProduct(r.product as unknown as Record<string, unknown>, r.categoryName)),
-  });
+    res.json({
+      featured: featured.map((r) => formatProduct(r.product as unknown as Record<string, unknown>, r.categoryName)),
+      trending: trending.map((r) => formatProduct(r.product as unknown as Record<string, unknown>, r.categoryName)),
+      newArrivals: newArrivals.map((r) => formatProduct(r.product as unknown as Record<string, unknown>, r.categoryName)),
+      bestSellers: bestSellers.map((r) => formatProduct(r.product as unknown as Record<string, unknown>, r.categoryName)),
+    });
+  } catch (err: any) {
+    logger.error({ err }, "Featured products fetch failed");
+    res.status(500).json({
+      error: "Internal Server Error in featured products",
+      message: err.message,
+      stack: err.stack,
+    });
+  }
 });
 
 router.get("/products/:id", async (req, res): Promise<void> => {
