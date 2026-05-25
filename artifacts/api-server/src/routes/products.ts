@@ -121,6 +121,12 @@ router.get("/products/featured", async (_req, res): Promise<void> => {
       error: "Internal Server Error in featured products",
       message: err.message,
       stack: err.stack,
+      cause: err.cause ? {
+        message: err.cause.message,
+        code: err.cause.code,
+        detail: err.cause.detail,
+        stack: err.cause.stack,
+      } : null,
     });
   }
 });
