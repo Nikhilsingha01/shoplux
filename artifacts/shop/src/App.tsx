@@ -84,6 +84,7 @@ import FAQ from "@/pages/static/faq";
 import Terms from "@/pages/static/terms";
 import PrivacyPolicy from "@/pages/static/privacy";
 import ReturnPolicy from "@/pages/static/return-policy";
+import About from "@/pages/static/about";
 
 // Admin pages
 import AdminDashboard from "@/pages/admin";
@@ -256,10 +257,11 @@ function ClerkProviderWithRoutes() {
           <Route path="/admin/emails" component={AdminEmails} />
           <Route path="/admin/support" component={AdminSupport} />
           
-          <Route path="/faq" component={FAQ} />
+           <Route path="/faq" component={FAQ} />
           <Route path="/terms" component={Terms} />
           <Route path="/privacy-policy" component={PrivacyPolicy} />
           <Route path="/return-policy" component={ReturnPolicy} />
+          <Route path="/about" component={About} />
 
           <Route path="/sign-in/*?" component={SignInPage} />
           <Route path="/sign-up/*?" component={SignUpPage} />

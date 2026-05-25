@@ -8,7 +8,7 @@ import {
   useGetWishlist,
 } from "@workspace/api-client-react";
 import { useParams, Link } from "wouter";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart";
 import { toast } from "sonner";
@@ -88,6 +88,31 @@ export default function ProductDetail() {
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+
+  const galleryRef = useRef<HTMLDivElement>(null);
+
+  const handleGalleryScroll = () => {
+    if (galleryRef.current) {
+      const { scrollLeft, clientWidth } = galleryRef.current;
+      if (clientWidth > 0) {
+        const newActive = Math.round(scrollLeft / clientWidth);
+        if (newActive !== activeImage && newActive >= 0 && product && newActive < product.images.length) {
+          setActiveImage(newActive);
+        }
+      }
+    }
+  };
+
+  const handleThumbnailClick = (idx: number) => {
+    setActiveImage(idx);
+    if (galleryRef.current) {
+      const containerWidth = galleryRef.current.clientWidth;
+      galleryRef.current.scrollTo({
+        left: idx * containerWidth,
+        behavior: "smooth"
+      });
+    }
+  };
 
   const handleShare = async () => {
     if (!product) return;
@@ -225,18 +250,26 @@ export default function ProductDetail() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-24">
           {/* Images */}
           <div className="space-y-4">
-            <div className="w-full h-[300px] md:h-[450px] bg-muted relative overflow-hidden group flex items-center justify-center rounded-sm">
-              {product.images[activeImage] ? (
-                <img
-                  src={product.images[activeImage]}
-                  alt={product.name}
-                  className="max-w-full max-h-full w-auto h-auto object-contain transition-transform duration-700 group-hover:scale-105"
-                />
+            <div 
+              ref={galleryRef}
+              onScroll={handleGalleryScroll}
+              className="w-full h-[300px] md:h-[450px] bg-muted relative flex snap-x snap-mandatory overflow-x-auto scrollbar-hide touch-pan-x rounded-sm border"
+            >
+              {product.images.length > 0 ? (
+                product.images.map((img, idx) => (
+                  <div key={idx} className="w-full h-full flex-none flex items-center justify-center snap-start relative px-4">
+                    <img
+                      src={img}
+                      alt={`${product.name} - Image ${idx + 1}`}
+                      className="max-w-full max-h-full w-auto h-auto object-contain transition-transform duration-700 hover:scale-105"
+                    />
+                  </div>
+                ))
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground">No image</div>
               )}
               {product.discount && product.discount > 0 ? (
-                <div className="absolute top-4 left-4 bg-destructive text-destructive-foreground text-xs font-bold px-2 py-1 uppercase tracking-wider">
+                <div className="absolute top-4 left-4 bg-destructive text-destructive-foreground text-xs font-bold px-2 py-1 uppercase tracking-wider z-10">
                   Save {product.discount}%
                 </div>
               ) : null}
@@ -246,8 +279,8 @@ export default function ProductDetail() {
                 {product.images.map((img, idx) => (
                   <button
                     key={idx}
-                    onClick={() => setActiveImage(idx)}
-                    className={`aspect-square bg-muted overflow-hidden border-2 transition-colors ${activeImage === idx ? "border-primary" : "border-transparent hover:border-muted-foreground/30"}`}
+                    onClick={() => handleThumbnailClick(idx)}
+                    className={`aspect-square bg-muted overflow-hidden border-2 transition-colors cursor-pointer ${activeImage === idx ? "border-primary" : "border-transparent hover:border-muted-foreground/30"}`}
                   >
                     <img src={img} alt="" className="w-full h-full object-cover" />
                   </button>

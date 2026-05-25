@@ -118,12 +118,23 @@ function BannerCarousel() {
 
 function CategoriesGrid() {
   const { data: categories, isLoading } = useListCategories();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: "left" | "right") => {
+    if (scrollRef.current) {
+      const { scrollLeft, clientWidth } = scrollRef.current;
+      const scrollTo = direction === "left"
+        ? scrollLeft - clientWidth * 0.75
+        : scrollLeft + clientWidth * 0.75;
+      scrollRef.current.scrollTo({ left: scrollTo, behavior: "smooth" });
+    }
+  };
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
         {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="aspect-square rounded-lg" />
+          <Skeleton key={i} className="flex-none w-[170px] sm:w-[220px] aspect-square rounded-xl" />
         ))}
       </div>
     );
@@ -132,29 +143,50 @@ function CategoriesGrid() {
   if (!Array.isArray(categories) || !categories.length) return null;
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-      {categories.slice(0, 5).map((cat) => (
-        <Link
-          key={cat.id}
-          href={`/products?category=${cat.slug}`}
-          className="group relative aspect-square rounded-xl overflow-hidden bg-muted"
-        >
-          {cat.image ? (
-            <img
-              src={cat.image}
-              alt={cat.name}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/20" />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-4">
-            <p className="text-white font-semibold text-sm md:text-base">{cat.name}</p>
-            <p className="text-white/70 text-xs mt-0.5">{cat.productCount || 0} items</p>
-          </div>
-        </Link>
-      ))}
+    <div className="relative group/slider">
+      {/* Scroll left button */}
+      <button
+        onClick={() => scroll("left")}
+        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2.5 bg-white/95 hover:bg-white text-black border border-border rounded-full shadow-md transition-all opacity-0 group-hover/slider:opacity-100 hidden md:flex items-center justify-center cursor-pointer hover:scale-105"
+      >
+        <ChevronLeft className="w-5 h-5" />
+      </button>
+
+      {/* Scroll right button */}
+      <button
+        onClick={() => scroll("right")}
+        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2.5 bg-white/95 hover:bg-white text-black border border-border rounded-full shadow-md transition-all opacity-0 group-hover/slider:opacity-100 hidden md:flex items-center justify-center cursor-pointer hover:scale-105"
+      >
+        <ChevronRight className="w-5 h-5" />
+      </button>
+
+      <div
+        ref={scrollRef}
+        className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory touch-pan-x -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth"
+      >
+        {categories.map((cat) => (
+          <Link
+            key={cat.id}
+            href={`/products?category=${cat.slug}`}
+            className="group relative flex-none w-[170px] sm:w-[220px] aspect-square rounded-xl overflow-hidden bg-muted snap-start shadow-sm"
+          >
+            {cat.image ? (
+              <img
+                src={cat.image}
+                alt={cat.name}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/20" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-4">
+              <p className="text-white font-semibold text-sm md:text-base">{cat.name}</p>
+              <p className="text-white/70 text-xs mt-0.5">{cat.productCount || 0} items</p>
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

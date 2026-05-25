@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and, or, isNull } from "drizzle-orm";
 import { db, categoriesTable, productsTable } from "@workspace/db";
 import {
   CreateCategoryBody,
@@ -23,7 +23,13 @@ router.get("/categories", async (_req, res): Promise<void> => {
       productCount: sql<number>`count(${productsTable.id})`,
     })
     .from(categoriesTable)
-    .leftJoin(productsTable, eq(productsTable.categoryId, categoriesTable.id))
+    .leftJoin(
+      productsTable,
+      and(
+        eq(productsTable.categoryId, categoriesTable.id),
+        or(eq(productsTable.isDeleted, false), isNull(productsTable.isDeleted))
+      )
+    )
     .groupBy(categoriesTable.id)
     .orderBy(categoriesTable.name);
 
@@ -84,6 +90,12 @@ router.delete("/categories/:id", requireAdmin, async (req, res): Promise<void> =
     res.status(400).json({ error: params.error.message });
     return;
   }
+
+  // Set categoryId to null for all products in this category to prevent foreign key constraints
+  await db
+    .update(productsTable)
+    .set({ categoryId: null })
+    .where(eq(productsTable.categoryId, params.data.id));
 
   const [cat] = await db
     .delete(categoriesTable)

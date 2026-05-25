@@ -2,12 +2,12 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useListProducts, useListCategories } from "@workspace/api-client-react";
 import { ProductCard } from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 
 export default function Products() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
   
   const [category, setCategory] = useState<string | undefined>(searchParams.get("category") || undefined);
@@ -15,6 +15,25 @@ export default function Products() {
   const [search, setSearch] = useState<string | undefined>(searchParams.get("search") || undefined);
   const isFeatured = searchParams.get("featured") === "true";
   const isNew = searchParams.get("new") === "true";
+
+  // Re-sync states when URL parameters change
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setCategory(params.get("category") || undefined);
+    setSort(params.get("sort") || undefined);
+    setSearch(params.get("search") || undefined);
+  }, [location]);
+
+  const updateFilterUrl = (key: string, value: string | undefined) => {
+    const params = new URLSearchParams(window.location.search);
+    if (value) {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    // Maintain key collection parameters
+    setLocation(`/products?${params.toString()}`);
+  };
 
   const { data: productsData, isLoading } = useListProducts({
     category,
@@ -42,7 +61,7 @@ export default function Products() {
           <div className="flex gap-4 items-center w-full md:w-auto overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
             <select 
               value={category || ""} 
-              onChange={(e) => setCategory(e.target.value || undefined)}
+              onChange={(e) => updateFilterUrl("category", e.target.value || undefined)}
               className="bg-transparent border border-border px-4 py-2 text-sm focus:outline-none focus:border-primary min-w-[140px]"
             >
               <option value="">All Categories</option>
@@ -53,7 +72,7 @@ export default function Products() {
 
             <select 
               value={sort || ""} 
-              onChange={(e) => setSort(e.target.value || undefined)}
+              onChange={(e) => updateFilterUrl("sort", e.target.value || undefined)}
               className="bg-transparent border border-border px-4 py-2 text-sm focus:outline-none focus:border-primary min-w-[140px]"
             >
               <option value="">Sort By</option>
@@ -77,7 +96,7 @@ export default function Products() {
         ) : !productsData?.products?.length ? (
           <div className="text-center py-24">
             <p className="text-muted-foreground mb-4">No products found matching your criteria.</p>
-            <Button variant="outline" onClick={() => { setCategory(undefined); setSort(undefined); setSearch(undefined); }}>
+            <Button variant="outline" onClick={() => setLocation("/products")}>
               Clear Filters
             </Button>
           </div>
