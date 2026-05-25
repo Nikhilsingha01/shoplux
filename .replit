@@ -6,4 +6,4 @@ channel = "stable-24_05"
 [deployment]
 deploymentTarget = "autoscale"
 build = ["sh", "-c", "npm install -g pnpm && pnpm install --no-frozen-lockfile && pnpm --filter @workspace/shop run build && pnpm --filter @workspace/api-server run build"]
-run = ["sh", "-c", "pnpm --filter @workspace/api-server run start:prod"]
+run = ["node", "--enable-source-maps", "artifacts/api-server/dist/index.mjs"]
