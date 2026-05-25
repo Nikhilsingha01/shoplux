@@ -37,6 +37,177 @@ const router = Router();
 (async () => {
   try {
     console.log("Running programmatic database migration for returns table...");
+
+    // ── Base tables (create if not exist - safe for fresh Replit DB) ──
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS categories (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        slug TEXT NOT NULL UNIQUE,
+        description TEXT,
+        image TEXT,
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS products (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        slug TEXT NOT NULL UNIQUE,
+        description TEXT,
+        price NUMERIC(10, 2) NOT NULL,
+        compare_price NUMERIC(10, 2),
+        discount NUMERIC(5, 2),
+        stock INTEGER NOT NULL DEFAULT 0,
+        category_id INTEGER REFERENCES categories(id),
+        images TEXT[] NOT NULL DEFAULT '{}',
+        variants TEXT,
+        tags TEXT[] NOT NULL DEFAULT '{}',
+        is_featured BOOLEAN NOT NULL DEFAULT false,
+        is_trending BOOLEAN NOT NULL DEFAULT false,
+        is_new_arrival BOOLEAN NOT NULL DEFAULT false,
+        is_best_seller BOOLEAN NOT NULL DEFAULT false,
+        rating NUMERIC(3, 2),
+        review_count INTEGER NOT NULL DEFAULT 0,
+        delivery_charge NUMERIC(10, 2) DEFAULT 0,
+        is_delivery_charge_applicable BOOLEAN DEFAULT false,
+        is_deleted BOOLEAN NOT NULL DEFAULT false,
+        flash_sale_id INTEGER,
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS app_users (
+        id SERIAL PRIMARY KEY,
+        clerk_user_id TEXT NOT NULL UNIQUE,
+        email TEXT NOT NULL,
+        full_name TEXT,
+        phone TEXT,
+        is_admin BOOLEAN NOT NULL DEFAULT false,
+        loyalty_points INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS addresses (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        full_name TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        email TEXT,
+        address_line TEXT NOT NULL,
+        landmark TEXT,
+        city TEXT NOT NULL,
+        state TEXT NOT NULL,
+        pincode TEXT NOT NULL,
+        is_default BOOLEAN NOT NULL DEFAULT false,
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS orders (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        payment_method TEXT NOT NULL DEFAULT 'cod',
+        payment_status TEXT NOT NULL DEFAULT 'pending',
+        total_amount NUMERIC(10, 2) NOT NULL,
+        subtotal NUMERIC(10, 2) NOT NULL DEFAULT 0,
+        delivery_charge NUMERIC(10, 2) NOT NULL DEFAULT 0,
+        discount NUMERIC(10, 2) NOT NULL DEFAULT 0,
+        coupon_code TEXT,
+        razorpay_order_id TEXT,
+        razorpay_payment_id TEXT,
+        address_id INTEGER REFERENCES addresses(id),
+        customer_name TEXT,
+        customer_email TEXT,
+        customer_phone TEXT,
+        loyalty_points_redeemed INTEGER DEFAULT 0,
+        loyalty_points_discount NUMERIC(10, 2) DEFAULT 0,
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS order_items (
+        id SERIAL PRIMARY KEY,
+        order_id INTEGER NOT NULL REFERENCES orders(id),
+        product_id INTEGER REFERENCES products(id),
+        product_name TEXT NOT NULL,
+        product_image TEXT,
+        price NUMERIC(10, 2) NOT NULL,
+        quantity INTEGER NOT NULL,
+        variant TEXT
+      );
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS admin_settings (
+        id SERIAL PRIMARY KEY,
+        store_name TEXT NOT NULL DEFAULT 'ShopLux',
+        store_tagline TEXT,
+        logo_url TEXT,
+        currency TEXT NOT NULL DEFAULT 'INR',
+        delivery_charge NUMERIC(10, 2) NOT NULL DEFAULT 49,
+        free_delivery_above NUMERIC(10, 2),
+        gst_percent NUMERIC(5, 2) NOT NULL DEFAULT 18,
+        whatsapp_number TEXT,
+        instagram_url TEXT,
+        admin_clerk_user_id TEXT,
+        trust_badge_1 TEXT DEFAULT 'Free delivery on orders above ₹999',
+        trust_badge_2 TEXT DEFAULT 'Secure & encrypted payments',
+        trust_badge_3 TEXT DEFAULT '7-day hassle-free returns',
+        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
+    `);
+    // Insert default admin_settings row if table is empty
+    await db.execute(sql`INSERT INTO admin_settings (store_name) SELECT 'ShopLux' WHERE NOT EXISTS (SELECT 1 FROM admin_settings);`);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS banners (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        subtitle TEXT,
+        image_url TEXT NOT NULL,
+        link_url TEXT,
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS coupons (
+        id SERIAL PRIMARY KEY,
+        code TEXT NOT NULL UNIQUE,
+        description TEXT,
+        discount_type TEXT NOT NULL DEFAULT 'percent',
+        discount_value NUMERIC(10, 2) NOT NULL,
+        min_order_amount NUMERIC(10, 2),
+        max_discount NUMERIC(10, 2),
+        usage_limit INTEGER,
+        used_count INTEGER NOT NULL DEFAULT 0,
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        expires_at TIMESTAMP WITH TIME ZONE,
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS wishlist (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        product_id INTEGER NOT NULL REFERENCES products(id),
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
+    `);
+
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS returns (
         id SERIAL PRIMARY KEY,
@@ -50,6 +221,7 @@ const router = Router();
         updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
       );
     `);
+
     // Add bank details + image columns if missing
     await db.execute(sql`ALTER TABLE returns ADD COLUMN IF NOT EXISTS image_url TEXT;`);
     await db.execute(sql`ALTER TABLE returns ADD COLUMN IF NOT EXISTS bank_name TEXT;`);
@@ -124,12 +296,40 @@ const router = Router();
     // ── Loyalty points column on app_users ──
     await db.execute(sql`ALTER TABLE app_users ADD COLUMN IF NOT EXISTS loyalty_points INTEGER NOT NULL DEFAULT 0;`);
 
-    // ── Loyalty / discount columns on orders ──
-    await db.execute(sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS loyalty_discount NUMERIC(10,2) NOT NULL DEFAULT 0;`);
-    await db.execute(sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS redeemed_points INTEGER NOT NULL DEFAULT 0;`);
+    // ── All orders table columns (using CORRECT column names from schema) ──
+    await db.execute(sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS subtotal NUMERIC(10,2) NOT NULL DEFAULT 0;`);
+    await db.execute(sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_charge NUMERIC(10,2) NOT NULL DEFAULT 0;`);
+    await db.execute(sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount NUMERIC(10,2) NOT NULL DEFAULT 0;`);
+    await db.execute(sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_code TEXT;`);
+    await db.execute(sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS razorpay_order_id TEXT;`);
+    await db.execute(sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS razorpay_payment_id TEXT;`);
+    await db.execute(sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name TEXT;`);
+    await db.execute(sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_email TEXT;`);
+    await db.execute(sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_phone TEXT;`);
+    await db.execute(sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS loyalty_points_redeemed INTEGER DEFAULT 0;`);
+    await db.execute(sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS loyalty_points_discount NUMERIC(10,2) DEFAULT 0;`);
+    await db.execute(sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW();`);
+    await db.execute(sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS address_id INTEGER;`);
+    await db.execute(sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'pending';`);
 
-    // ── WhatsApp number in admin_settings ──
+    // ── order_items table extra columns ──
+    await db.execute(sql`ALTER TABLE order_items ADD COLUMN IF NOT EXISTS variant TEXT;`);
+    await db.execute(sql`ALTER TABLE order_items ADD COLUMN IF NOT EXISTS product_image TEXT;`);
+
+    // ── WhatsApp number and other admin_settings columns ──
     await db.execute(sql`ALTER TABLE admin_settings ADD COLUMN IF NOT EXISTS whatsapp_number TEXT;`);
+    await db.execute(sql`ALTER TABLE admin_settings ADD COLUMN IF NOT EXISTS store_tagline TEXT;`);
+    await db.execute(sql`ALTER TABLE admin_settings ADD COLUMN IF NOT EXISTS logo_url TEXT;`);
+    await db.execute(sql`ALTER TABLE admin_settings ADD COLUMN IF NOT EXISTS free_delivery_above NUMERIC(10,2);`);
+    await db.execute(sql`ALTER TABLE admin_settings ADD COLUMN IF NOT EXISTS gst_percent NUMERIC(5,2) NOT NULL DEFAULT 18;`);
+    await db.execute(sql`ALTER TABLE admin_settings ADD COLUMN IF NOT EXISTS instagram_url TEXT;`);
+    await db.execute(sql`ALTER TABLE admin_settings ADD COLUMN IF NOT EXISTS admin_clerk_user_id TEXT;`);
+    await db.execute(sql`ALTER TABLE admin_settings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW();`);
+
+    // ── app_users table columns ──
+    await db.execute(sql`ALTER TABLE app_users ADD COLUMN IF NOT EXISTS full_name TEXT;`);
+    await db.execute(sql`ALTER TABLE app_users ADD COLUMN IF NOT EXISTS phone TEXT;`);
+    await db.execute(sql`ALTER TABLE app_users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT false;`);
 
     console.log("Database migration for returns table COMPLETED SUCCESSFULLY");
   } catch (err: any) {
