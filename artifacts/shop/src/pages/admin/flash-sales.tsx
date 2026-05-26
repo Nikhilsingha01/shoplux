@@ -55,8 +55,8 @@ export default function AdminFlashSales() {
         body: JSON.stringify({
           title,
           discountPercent,
-          startTime,
-          endTime,
+          startTime: new Date(startTime).toISOString(),
+          endTime: new Date(endTime).toISOString(),
           productIds: selectedProducts,
         }),
       });

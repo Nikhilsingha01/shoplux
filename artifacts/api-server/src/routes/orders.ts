@@ -692,15 +692,6 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
     }
   }
 
-  // Credit loyalty points earned (1 point per ₹10 spent)
-  const pointsEarned = Math.floor(finalTotalAmount / 10);
-  if (pointsEarned > 0 && appUser) {
-    await db
-      .update(appUsersTable)
-      .set({ loyaltyPoints: sql`${appUsersTable.loyaltyPoints} + ${pointsEarned}` })
-      .where(eq(appUsersTable.clerkUserId, userId));
-  }
-
   // Increment coupon usage
   if (couponCode) {
     const [coupon] = await db
@@ -932,6 +923,16 @@ router.patch("/orders/:id/status", requireAdmin, async (req, res): Promise<void>
     .set(updateData)
     .where(eq(ordersTable.id, originalOrder.id))
     .returning();
+
+  if (parsed.data.status === "delivered" && originalOrder.status !== "delivered" && order.userId) {
+    const pointsEarned = Math.floor(Number(order.totalAmount) / 10);
+    if (pointsEarned > 0) {
+      await db
+        .update(appUsersTable)
+        .set({ loyaltyPoints: sql`${appUsersTable.loyaltyPoints} + ${pointsEarned}` })
+        .where(eq(appUsersTable.clerkUserId, order.userId));
+    }
+  }
 
   const [settings] = await db.select().from(adminSettingsTable).limit(1);
   const storeName = settings?.storeName ?? "ShopLux";

@@ -304,13 +304,6 @@ export default function Home() {
 
   return (
     <AppLayout>
-      <div className="fixed bottom-6 right-6 z-50">
-        <Link href="/admin-login">
-          <Button className="rounded-full shadow-2xl px-6 h-12 bg-black hover:bg-black/90 text-white font-medium tracking-wide">
-            Admin Panel
-          </Button>
-        </Link>
-      </div>
       <BannerCarousel />
 
       {/* Flash Sale Banner */}
