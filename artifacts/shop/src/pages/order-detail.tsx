@@ -46,38 +46,37 @@ function StatusStepper({ status }: { status: string }) {
   }
 
   return (
-    <div className="w-full mt-6 mb-2 relative">
-      {/* Background connecting line */}
-      <div className="absolute top-1/2 left-0 right-0 h-1 bg-zinc-800/50 -translate-y-1/2 z-0 rounded-full" />
-      
-      {/* Active connecting line */}
-      <div 
-        className="absolute top-1/2 left-0 h-1 bg-gradient-to-r from-amber-500 to-amber-400 -translate-y-1/2 z-0 rounded-full transition-all duration-700 ease-in-out shadow-[0_0_10px_rgba(245,158,11,0.5)]"
-        style={{ width: `${(currentIdx / (STATUS_STEPS.length - 1)) * 100}%` }}
-      />
-      
-      <div className="flex items-center justify-between relative z-10">
+    <div className="w-full mt-4">
+      <div className="flex items-center justify-between">
         {STATUS_STEPS.map((step, idx) => {
           const done = idx <= currentIdx;
           const active = idx === currentIdx;
           return (
-            <div key={step} className="flex flex-col items-center flex-1 relative group">
+            <div key={step} className="flex flex-col items-center flex-1">
               <div
-                className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-xs md:text-sm font-bold border-[3px] transition-all duration-500 ${
+                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors ${
                   done
-                    ? "bg-amber-500 border-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.6)] scale-110"
-                    : "bg-zinc-900 border-zinc-700 text-zinc-500"
-                } ${active ? "ring-4 ring-amber-500/30 ring-offset-2 ring-offset-zinc-950 animate-pulse" : ""}`}
+                    ? "bg-primary border-primary text-primary-foreground"
+                    : "border-muted-foreground/30 text-muted-foreground/30"
+                } ${active ? "ring-2 ring-primary ring-offset-2" : ""}`}
               >
-                {done ? <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5" /> : idx + 1}
+                {done ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
               </div>
               <span
-                className={`absolute -bottom-8 text-[10px] md:text-xs text-center capitalize font-bold tracking-wider transition-colors duration-300 ${
-                  done ? "text-amber-400 drop-shadow-md" : "text-zinc-500"
-                } ${active ? "scale-105" : ""}`}
+                className={`text-[10px] mt-1 text-center capitalize font-medium ${
+                  done ? "text-foreground" : "text-muted-foreground/50"
+                }`}
               >
                 {step}
               </span>
+              {idx < STATUS_STEPS.length - 1 && (
+                <div
+                  className={`h-0.5 w-full mt-[-18px] -z-10 ${
+                    idx < currentIdx ? "bg-primary" : "bg-muted"
+                  }`}
+                  style={{ marginTop: "-26px", position: "relative", top: "-13px" }}
+                />
+              )}
             </div>
           );
         })}
@@ -261,40 +260,34 @@ export default function OrderDetail() {
         <Redirect to="/sign-in" />
       </Show>
       <Show when="signed-in">
-        <div className="container mx-auto px-4 py-8 md:py-12 max-w-5xl relative">
-          {/* Decorative glowing background elements */}
-          <div className="fixed top-20 left-0 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[120px] pointer-events-none" />
-          <div className="fixed bottom-0 right-0 w-[600px] h-[600px] bg-red-600/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="container mx-auto px-4 py-8 md:py-12 max-w-4xl">
 
           {/* Success Banner */}
           {showSuccess && (
-            <div className="mb-10 relative overflow-hidden bg-gradient-to-r from-emerald-900/80 to-emerald-800/60 backdrop-blur-xl border border-emerald-500/30 rounded-2xl p-8 shadow-[0_0_40px_rgba(16,185,129,0.15)] group animate-in slide-in-from-top-10 fade-in duration-700">
-              <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-64 h-64 bg-emerald-500/20 rounded-full blur-[60px]" />
-              <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
-                <div className="w-16 h-16 rounded-full bg-emerald-400/20 border-2 border-emerald-400/30 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-500 shadow-lg shadow-emerald-500/20">
-                  <CheckCircle2 className="w-8 h-8 text-emerald-400 animate-pulse" />
-                </div>
-                <div>
-                  <h2 className="font-serif text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 to-emerald-400 tracking-tight mb-2">
-                    {successType === "paid" ? "Payment Successful!" : "Order Placed Successfully!"}
-                  </h2>
-                  <p className="text-emerald-100/80 text-sm md:text-base max-w-xl">
-                    {successType === "paid"
-                      ? "Your payment has been verified and your order is confirmed. We're getting it ready for you."
-                      : "Your COD order has been placed. Pay conveniently when it arrives at your doorstep."}
-                  </p>
-                  <div className="flex flex-wrap justify-center sm:justify-start gap-4 mt-6">
-                    <Link href="/orders">
-                      <Button className="rounded-full bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-bold px-6 shadow-[0_0_15px_rgba(16,185,129,0.4)] hover:shadow-[0_0_25px_rgba(16,185,129,0.6)] transition-all">
-                        View All Orders
-                      </Button>
-                    </Link>
-                    <Link href="/products">
-                      <Button variant="outline" className="rounded-full border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200 px-6">
-                        Continue Shopping
-                      </Button>
-                    </Link>
-                  </div>
+            <div className="mb-8 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-sm px-6 py-5 flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="w-7 h-7 text-green-600 dark:text-green-400" />
+              </div>
+              <div>
+                <h2 className="font-serif font-bold text-lg text-green-800 dark:text-green-300">
+                  {successType === "paid" ? "Payment Successful!" : "Order Placed Successfully!"}
+                </h2>
+                <p className="text-sm text-green-700 dark:text-green-400 mt-1">
+                  {successType === "paid"
+                    ? "Your payment has been verified and your order is confirmed. We'll start processing it right away."
+                    : "Your COD order has been placed. Pay when it arrives at your doorstep."}
+                </p>
+                <div className="flex gap-4 mt-3">
+                  <Link href="/orders">
+                    <Button size="sm" variant="outline" className="rounded-none text-green-700 border-green-300 hover:bg-green-50">
+                      View All Orders
+                    </Button>
+                  </Link>
+                  <Link href="/products">
+                    <Button size="sm" variant="ghost" className="rounded-none text-green-700 hover:bg-green-50">
+                      Continue Shopping
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -326,52 +319,48 @@ export default function OrderDetail() {
           ) : (
             <div className="space-y-8">
               {/* Order header */}
-              <div className="bg-zinc-900/60 backdrop-blur-xl border border-zinc-800/80 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12 relative z-10">
+              <div className="bg-background border p-6 shadow-sm">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                   <div>
-                    <h1 className="font-serif text-3xl md:text-4xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-r from-white to-zinc-400 tracking-tight">
-                      Order #{(order as any).customerOrderNumber ?? order.id}
-                    </h1>
-                    <div className="flex items-center gap-3 text-sm text-zinc-400">
-                      <span className="font-mono text-xs opacity-70">ID: #{order.id}</span>
-                      <span className="w-1 h-1 rounded-full bg-zinc-700" />
-                      <span>
-                        {new Date(order.createdAt).toLocaleDateString("en-IN", {
-                          day: "numeric", month: "long", year: "numeric", hour: '2-digit', minute: '2-digit'
-                        })}
-                      </span>
-                    </div>
+                    <p className="font-serif text-2xl font-bold mb-1">
+                      Your Order #{(order as any).customerOrderNumber ?? order.id}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Internal ID: #{order.id}</p>
+                    <p className="text-muted-foreground text-sm mt-1">
+                      Placed on {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                        day: "numeric", month: "long", year: "numeric"
+                      })}
+                    </p>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
                     {order.paymentStatus === "paid" ? (
-                      <span className="inline-flex items-center gap-1.5 text-xs px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold tracking-widest uppercase rounded-full shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-                        <CheckCircle2 className="w-4 h-4" /> Paid
+                      <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-medium rounded-full">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Paid
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 text-xs px-4 py-2 bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold tracking-widest uppercase rounded-full shadow-[0_0_10px_rgba(245,158,11,0.2)] animate-pulse">
-                        <Clock className="w-4 h-4" /> Pending
+                      <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 font-medium rounded-full">
+                        <Clock className="w-3.5 h-3.5" /> Payment Pending
                       </span>
                     )}
                     {/* Cancel button */}
                     {(order.status === "pending" || order.status === "confirmed") && (
-                      <Button size="sm" variant="outline" className="rounded-full text-red-400 border-red-500/30 hover:bg-red-500/10 hover:text-red-300 hover:border-red-500/50 h-9 px-4 gap-1.5 transition-all shadow-lg"
+                      <Button size="sm" variant="outline" className="rounded-none text-red-600 border-red-200 hover:bg-red-50 h-8 text-xs gap-1"
                         onClick={() => setIsCancelDialogOpen(true)}>
-                        <XCircle className="w-4 h-4" /> Cancel Order
+                        <XCircle className="w-3.5 h-3.5" /> Cancel Order
                       </Button>
                     )}
                     {/* Change address button */}
                     {!["shipped","out_for_delivery","delivered","cancelled"].includes(order.status) && (
-                      <Button size="sm" variant="outline" className="rounded-full text-zinc-300 border-zinc-700 hover:bg-zinc-800 hover:text-white h-9 px-4 gap-1.5 transition-all shadow-lg"
+                      <Button size="sm" variant="outline" className="rounded-none h-8 text-xs gap-1"
                         onClick={() => { setSelectedNewAddressId(null); setIsAddressDialogOpen(true); }}>
-                        <Pencil className="w-4 h-4" /> Change Address
+                        <Pencil className="w-3.5 h-3.5" /> Change Address
                       </Button>
                     )}
                     {/* Pay Online Now (COD → Online) */}
                     {order.paymentMethod === "cod" && order.paymentStatus !== "paid" && !["delivered","cancelled"].includes(order.status) && (
-                      <Button size="sm" className="rounded-full h-9 px-5 gap-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold shadow-[0_0_15px_rgba(245,158,11,0.4)] hover:shadow-[0_0_25px_rgba(245,158,11,0.6)] transition-all transform hover:-translate-y-0.5"
+                      <Button size="sm" className="rounded-none h-8 text-xs gap-1 bg-green-600 hover:bg-green-700 text-white"
                         onClick={handlePayOnline} disabled={isPayingOnline}>
-                        <Smartphone className="w-4 h-4" />
+                        <Smartphone className="w-3.5 h-3.5" />
                         {isPayingOnline ? "Loading..." : "Pay Online Now"}
                       </Button>
                     )}
@@ -384,68 +373,58 @@ export default function OrderDetail() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-6">
                   {/* Items */}
-                  <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/80 rounded-2xl p-6 md:p-8 shadow-xl">
-                    <h2 className="font-serif text-xl md:text-2xl font-black mb-6 flex items-center gap-3 text-white">
-                      <div className="p-2 bg-amber-500/20 rounded-lg text-amber-400 border border-amber-500/30">
-                        <PackageCheck className="w-5 h-5 md:w-6 md:h-6" />
-                      </div>
+                  <div className="bg-background border p-6 shadow-sm">
+                    <h2 className="font-serif text-lg font-semibold mb-4 border-b pb-2 flex items-center gap-2">
+                      <PackageCheck className="w-5 h-5" />
                       Items Ordered
                     </h2>
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                       {order.items.map((item) => (
-                        <div key={item.id} className="group flex flex-col sm:flex-row gap-5 p-4 rounded-xl bg-zinc-950 border border-zinc-800 hover:border-amber-500/30 transition-colors shadow-lg">
-                          <div className="w-full sm:w-28 h-36 sm:h-32 bg-zinc-900 rounded-lg overflow-hidden flex-shrink-0 relative">
+                        <div key={item.id} className="flex gap-4">
+                          <div className="w-20 h-24 bg-muted flex-shrink-0 overflow-hidden">
                             {item.productImage ? (
                               <img
                                 src={item.productImage}
                                 alt={item.productName}
-                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                className="w-full h-full object-cover"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-zinc-700">No Image</div>
+                              <div className="w-full h-full bg-secondary" />
                             )}
-                            <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-lg pointer-events-none" />
                           </div>
-                          <div className="flex-1 flex flex-col justify-between">
-                            <div>
-                              <Link
-                                href={`/products/${item.productId}`}
-                                className="font-bold text-base md:text-lg text-zinc-100 hover:text-amber-400 transition-colors line-clamp-2"
-                              >
-                                {item.productName}
-                              </Link>
-                              {item.variant && (
-                                <span className="inline-block mt-2 px-2.5 py-1 bg-zinc-800 text-zinc-300 text-xs font-semibold uppercase tracking-wider rounded-md border border-zinc-700">
-                                  {item.variant}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex justify-between items-end mt-4">
-                              <div className="space-y-1">
-                                <span className="text-zinc-500 text-xs uppercase tracking-widest font-bold">Qty & Price</span>
-                                <div className="text-zinc-300 font-medium text-sm">
-                                  {item.quantity} × <span className="text-amber-400">₹{item.price.toLocaleString("en-IN")}</span>
-                                </div>
-                              </div>
-                              <span className="font-black text-xl text-white">
+                          <div className="flex-1">
+                            <Link
+                              href={`/products/${item.productId}`}
+                              className="font-medium hover:underline underline-offset-4"
+                            >
+                              {item.productName}
+                            </Link>
+                            {item.variant && (
+                              <p className="text-sm text-muted-foreground mt-0.5">
+                                Variant: {item.variant}
+                              </p>
+                            )}
+                            <div className="flex justify-between items-center mt-2 text-sm">
+                              <span className="text-muted-foreground">Qty: {item.quantity}</span>
+                              <span className="font-semibold">
                                 ₹{(item.price * item.quantity).toLocaleString("en-IN")}
                               </span>
                             </div>
 
                             {/* Return action or badge */}
-                            <div className="flex justify-end mt-4 pt-4 border-t border-zinc-800">
+                            <div className="flex justify-end mt-2 pt-2 border-t border-dashed border-muted/60">
                               {item.returnStatus === "pending" && (
-                                <span className="inline-flex items-center text-xs px-3 py-1.5 bg-amber-500/10 text-amber-400 font-bold uppercase tracking-wider rounded-md border border-amber-500/20">
-                                  Return Pending
+                                <span className="inline-flex items-center text-xs px-2.5 py-1 bg-yellow-50 dark:bg-yellow-950/20 text-yellow-700 dark:text-yellow-400 font-medium rounded border border-yellow-200 dark:border-yellow-900">
+                                  Return Requested (Pending)
                                 </span>
                               )}
                               {item.returnStatus === "approved" && (
-                                <span className="inline-flex items-center text-xs px-3 py-1.5 bg-emerald-500/10 text-emerald-400 font-bold uppercase tracking-wider rounded-md border border-emerald-500/20">
-                                  Refunded
+                                <span className="inline-flex items-center text-xs px-2.5 py-1 bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 font-medium rounded border border-green-200 dark:border-green-900">
+                                  Return Approved & Refunded
                                 </span>
                               )}
                               {item.returnStatus === "rejected" && (
-                                <span className="inline-flex items-center text-xs px-3 py-1.5 bg-red-500/10 text-red-400 font-bold uppercase tracking-wider rounded-md border border-red-500/20">
+                                <span className="inline-flex items-center text-xs px-2.5 py-1 bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 font-medium rounded border border-red-200 dark:border-red-900">
                                   Return Rejected
                                 </span>
                               )}
@@ -453,7 +432,7 @@ export default function OrderDetail() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="h-8 rounded-full text-xs font-bold px-4 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-all shadow-md"
+                                  className="h-8 text-xs rounded-none"
                                   onClick={() => handleOpenReturnDialog({ id: item.id, productName: item.productName })}
                                 >
                                   Return Item
@@ -468,58 +447,65 @@ export default function OrderDetail() {
 
                   {/* Address + Payment details */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/80 rounded-2xl p-6 shadow-xl relative overflow-hidden group hover:border-amber-500/30 transition-colors">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-[40px]" />
-                      <h2 className="font-serif text-lg font-black mb-4 flex items-center gap-2 text-white">
-                        <MapPin className="w-5 h-5 text-amber-400" />
+                    <div className="bg-background border p-6 shadow-sm">
+                      <h2 className="font-serif text-base font-semibold mb-3 border-b pb-2 flex items-center gap-2">
+                        <MapPin className="w-4 h-4" />
                         Delivery Address
                       </h2>
                       {order.address ? (
-                        <div className="text-sm space-y-2 relative z-10">
-                          <p className="font-bold text-base text-zinc-100">{order.address.fullName}</p>
-                          <p className="text-zinc-400 leading-relaxed">
-                            {order.address.addressLine}
-                            {order.address.landmark && <><br />Landmark: {order.address.landmark}</>}
-                            <br />{order.address.city}, {order.address.state} — {order.address.pincode}
+                        <div className="text-sm space-y-1">
+                          <p className="font-medium">{order.address.fullName}</p>
+                          <p className="text-muted-foreground">{order.address.addressLine}</p>
+                          {order.address.landmark && (
+                            <p className="text-muted-foreground">{order.address.landmark}</p>
+                          )}
+                          <p className="text-muted-foreground">
+                            {order.address.city}, {order.address.state} — {order.address.pincode}
                           </p>
-                          <p className="text-amber-400/90 font-medium pt-2 flex items-center gap-1.5">
-                            <span className="w-1 h-1 rounded-full bg-amber-400" />
-                            {order.address.phone}
+                          <p className="text-muted-foreground pt-1">
+                            Ph: {order.address.phone}
                           </p>
                         </div>
                       ) : (
-                        <p className="text-zinc-500 text-sm italic relative z-10">Address details not available.</p>
+                        <p className="text-muted-foreground text-sm">Address details not available.</p>
                       )}
                     </div>
 
-                    <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/80 rounded-2xl p-6 shadow-xl relative overflow-hidden group hover:border-emerald-500/30 transition-colors">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-[40px]" />
-                      <h2 className="font-serif text-lg font-black mb-4 flex items-center gap-2 text-white">
-                        <CreditCard className="w-5 h-5 text-emerald-400" />
-                        Payment Info
+                    <div className="bg-background border p-6 shadow-sm">
+                      <h2 className="font-serif text-base font-semibold mb-3 border-b pb-2 flex items-center gap-2">
+                        <CreditCard className="w-4 h-4" />
+                        Payment Details
                       </h2>
-                      <div className="text-sm space-y-3 relative z-10">
-                        <div className="flex justify-between items-center border-b border-zinc-800/50 pb-2">
-                          <span className="text-zinc-500 font-semibold uppercase tracking-wider text-xs">Method</span>
-                          <span className="uppercase font-bold text-zinc-100">{order.paymentMethod}</span>
+                      <div className="text-sm space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Method</span>
+                          <span className="uppercase font-medium">{order.paymentMethod}</span>
                         </div>
-                        <div className="flex justify-between items-center border-b border-zinc-800/50 pb-2">
-                          <span className="text-zinc-500 font-semibold uppercase tracking-wider text-xs">Status</span>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Status</span>
                           <span
-                            className={`capitalize font-black tracking-wide ${
+                            className={`capitalize font-medium ${
                               order.paymentStatus === "paid"
-                                ? "text-emerald-400"
-                                : "text-amber-400"
+                                ? "text-green-600"
+                                : "text-amber-600"
                             }`}
                           >
                             {order.paymentStatus ?? "Pending"}
                           </span>
                         </div>
                         {order.razorpayPaymentId && (
-                          <div className="flex flex-col gap-1 pt-1">
-                            <span className="text-zinc-500 font-semibold uppercase tracking-wider text-[10px]">Txn ID</span>
-                            <span className="font-mono text-xs text-zinc-300 bg-zinc-950 px-2 py-1 rounded border border-zinc-800 break-all">
+                          <div className="flex flex-col gap-0.5 pt-1">
+                            <span className="text-muted-foreground text-xs">Payment ID</span>
+                            <span className="font-mono text-xs break-all">
                               {order.razorpayPaymentId}
+                            </span>
+                          </div>
+                        )}
+                        {order.razorpayOrderId && !order.razorpayPaymentId && (
+                          <div className="flex flex-col gap-0.5 pt-1">
+                            <span className="text-muted-foreground text-xs">Order Ref</span>
+                            <span className="font-mono text-xs break-all">
+                              {order.razorpayOrderId}
                             </span>
                           </div>
                         )}
@@ -529,49 +515,45 @@ export default function OrderDetail() {
                 </div>
 
                 {/* Summary sidebar */}
-                <div className="lg:sticky lg:top-24 bg-gradient-to-b from-zinc-900 to-zinc-950 border border-zinc-800 rounded-2xl p-6 md:p-8 shadow-2xl h-fit relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500/10 rounded-full blur-[50px] pointer-events-none" />
-                  <h2 className="font-serif font-black text-xl border-b border-zinc-800 pb-4 mb-6 text-white tracking-tight">
-                    Order Summary
+                <div className="bg-muted/30 p-6 h-fit border">
+                  <h2 className="font-serif font-semibold text-base border-b pb-3 mb-4">
+                    Price Summary
                   </h2>
-                  <div className="space-y-4 text-sm relative z-10">
-                    <div className="flex justify-between items-center">
-                      <span className="text-zinc-400 font-medium">Subtotal</span>
-                      <span className="text-zinc-100 font-semibold">₹{(order.subtotal ?? 0).toLocaleString("en-IN")}</span>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span>₹{(order.subtotal ?? 0).toLocaleString("en-IN")}</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-zinc-400 font-medium">Delivery</span>
-                      <span className="text-zinc-100 font-semibold">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Delivery</span>
+                      <span>
                         {(order.deliveryCharge ?? 0) === 0
-                          ? <span className="text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded text-xs uppercase tracking-wider font-bold">Free</span>
+                          ? "Free"
                           : `₹${(order.deliveryCharge ?? 0).toLocaleString("en-IN")}`}
                       </span>
                     </div>
                     {order.discount != null && order.discount > 0 && (
-                      <div className="flex justify-between items-center text-emerald-400">
-                        <span className="font-medium">Discount</span>
-                        <span className="font-bold">−₹{order.discount.toLocaleString("en-IN")}</span>
+                      <div className="flex justify-between text-green-600">
+                        <span>Discount</span>
+                        <span>−₹{order.discount.toLocaleString("en-IN")}</span>
                       </div>
                     )}
                     {order.couponCode && (
-                      <div className="flex justify-between items-center text-xs mt-2">
-                        <span className="text-zinc-500 font-semibold uppercase tracking-wider">Applied Coupon</span>
-                        <span className="font-mono bg-zinc-800 text-amber-400 px-2 py-1 rounded border border-zinc-700 font-bold">{order.couponCode}</span>
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Coupon</span>
+                        <span className="font-mono">{order.couponCode}</span>
                       </div>
                     )}
-                    
-                    <div className="my-6 border-t border-dashed border-zinc-700" />
-                    
-                    <div className="flex justify-between items-end text-lg">
-                      <span className="font-black text-zinc-300">Total</span>
-                      <span className="font-black text-3xl text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500">
+                    <div className="flex justify-between border-t pt-3 mt-3 text-base">
+                      <span className="font-bold">Total</span>
+                      <span className="font-bold">
                         ₹{order.totalAmount.toLocaleString("en-IN")}
                       </span>
                     </div>
                   </div>
 
-                  <Link href="/products" className="block mt-8 relative z-10">
-                    <Button className="w-full rounded-full bg-zinc-100 hover:bg-white text-zinc-950 font-black h-12 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all uppercase tracking-wider text-xs">
+                  <Link href="/products" className="block mt-6">
+                    <Button variant="outline" className="w-full rounded-none">
                       Continue Shopping
                     </Button>
                   </Link>
