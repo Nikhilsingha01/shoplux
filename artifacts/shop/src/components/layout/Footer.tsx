@@ -3,7 +3,7 @@ import { Instagram, MessageCircle } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="bg-foreground text-background py-12 md:py-16 mt-auto">
+    <footer className="bg-foreground text-background pt-12 pb-[120px] md:py-16 mt-auto">
       <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
         <div className="space-y-4">
           <img src={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/logo.svg`} alt="ShopLux" className="h-8 invert" />
