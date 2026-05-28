@@ -247,6 +247,7 @@ const router = Router();
     await db.execute(sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS is_best_seller BOOLEAN NOT NULL DEFAULT false;`);
     await db.execute(sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS compare_price NUMERIC(10, 2);`);
     await db.execute(sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS discount NUMERIC(5, 2);`);
+    await db.execute(sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0;`);
     await db.execute(sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW();`);
 
     // ── Categories table newer columns ──
