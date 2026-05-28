@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShopLux - Custom Merchandise</title>
+  <style>
+    :root {
+      --primary: #f97316;
+      --primary-hover: #ea580c;
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --text: #171717;
+      --text-muted: #525252;
+      --border: #e5e5e5;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    header {
+      background-color: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1.5rem 2rem;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    #loading {
+      text-align: center;
+      padding: 4rem 0;
+      color: var(--text-muted);
+    }
+
+    #error {
+      display: none;
+      background-color: #fee2e2;
+      color: #991b1b;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(1, 1fr);
+      gap: 2rem;
+    }
+
+    @media (min-width: 640px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 768px) {
+      .grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .card {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    .card-img-container {
+      aspect-ratio: 1 / 1;
+      background-color: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .card-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .card-content {
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+
+    .card-price {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 1rem;
+      margin-top: auto;
+    }
+
+    .buy-btn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      width: 100%;
+    }
+
+    .buy-btn:hover {
+      background-color: var(--primary-hover);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>ShopLux Custom Merchandise</h1>
+    <p style="color: var(--text-muted); margin-top: 0.5rem;">Powered by Qikink Print-on-Demand</p>
+  </header>
+
+  <main>
+    <div id="error"></div>
+    <div id="loading">Loading amazing products...</div>
+    <div class="grid" id="products-grid"></div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const grid = document.getElementById('products-grid');
+      const loading = document.getElementById('loading');
+      const errorDiv = document.getElementById('error');
+
+      try {
+        const response = await fetch('/products');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch products: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        const products = Array.isArray(data) ? data : (data.data || data.products || []);
+        
+        loading.style.display = 'none';
+        
+        if (products.length === 0) {
+          grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #525252; padding: 2rem;">No products found. Design some items on Qikink to see them here!</div>';
+          return;
+        }
+
+        products.forEach(product => {
+          // Adjust parsing depending on actual Qikink API response structure
+          const name = product.name || product.title || 'Custom Product';
+          const price = product.price || product.base_price || product.selling_price || '0.00';
+          const imageUrl = product.image_url || product.featured_image || (product.images && product.images[0]) || 'https://via.placeholder.com/400?text=No+Image';
+          
+          const card = document.createElement('div');
+          card.className = 'card';
+          
+          card.innerHTML = `
+            <div class="card-img-container">
+              <img src="${imageUrl}" alt="${name}" class="card-img" onerror="this.src='https://via.placeholder.com/400?text=Image+Unavailable'">
+            </div>
+            <div class="card-content">
+              <h3 class="card-title">${name}</h3>
+              <div class="card-price">₹${parseFloat(price).toFixed(2)}</div>
+              <button class="buy-btn">Buy Now</button>
+            </div>
+          `;
+          
+          grid.appendChild(card);
+        });
+
+      } catch (err) {
+        console.error("Error fetching products:", err);
+        loading.style.display = 'none';
+        errorDiv.style.display = 'block';
+        errorDiv.textContent = "Oops! We couldn't load the products. " + err.message;
+      }
+    });
+  </script>
+</body>
+</html>

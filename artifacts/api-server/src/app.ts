@@ -60,6 +60,18 @@ app.use(
 // Serve uploads statically
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
+import { getMyProducts } from "./qikink";
+
+app.get("/products", async (req, res) => {
+  try {
+    const products = await getMyProducts();
+    res.json(products);
+  } catch (error: any) {
+    logger.error({ error: error.message }, "Error fetching products from Qikink");
+    res.status(500).json({ error: "Failed to fetch products" });
+  }
+});
+
 app.use("/api", router);
 
 export default app;
