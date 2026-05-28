@@ -57,8 +57,13 @@ app.use(
   }),
 );
 
-// Serve uploads statically
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve uploads statically robustly
+const uploadsDir = path.resolve(__dirname, "../uploads");
+app.use("/uploads", express.static(uploadsDir));
 
 import { getMyProducts } from "./qikink";
 
@@ -73,5 +78,18 @@ app.get("/products", async (req, res) => {
 });
 
 app.use("/api", router);
+
+// Serve frontend statically in production
+const isProd = process.env.NODE_ENV === "production";
+if (isProd) {
+  const shopDistPath = path.resolve(__dirname, "../../shop/dist/public");
+  logger.info({ shopDistPath }, "Serving frontend static assets in production");
+  app.use(express.static(shopDistPath));
+  
+  // SPA fallback routing - serve index.html for all non-API / non-upload routes
+  app.get(/^\/(?!api|uploads).*$/, (req, res) => {
+    res.sendFile(path.join(shopDistPath, "index.html"));
+  });
+}
 
 export default app;

@@ -3,7 +3,7 @@ import { logger } from "./logger";
 import fs from "fs";
 import path from "path";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY || "re_mock_1234567890");
 
 const FROM_ADDRESS = process.env.RESEND_FROM ?? "onboarding@resend.dev";
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL ?? "support@shoplux.in";
