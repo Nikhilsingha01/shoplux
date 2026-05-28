@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getAuth } from "@clerk/express";
-import { db, adminSettingsTable, productsTable, ordersTable } from "@workspace/db";
+import { db, adminSettingsTable, productsTable, ordersTable, categoriesTable } from "@workspace/db";
 import { eq, desc, and, or, isNull } from "drizzle-orm";
 import { SendChatMessageBody } from "@workspace/api-zod";
 import axios from "axios";
@@ -34,6 +34,15 @@ router.post("/chatbot/chat", async (req, res): Promise<void> => {
       res.json({ reply: `Thank you for reaching out to ${storeName}! Our AI shopping assistant is currently resting, but you can contact us directly at ${supportEmail} for any assistance.` });
       return;
     }
+
+    // Fetch Categories
+    const categories = await db
+      .select()
+      .from(categoriesTable);
+
+    const categoriesText = categories
+      .map((c) => `- **${c.name}** (slug: ${c.slug}): ${c.description || "Premium collection."}`)
+      .join("\n");
 
     // 2. Fetch Active Products
     const activeProducts = await db
@@ -86,6 +95,9 @@ Store details:
 - Return/Refund Policy: 7-day hassle-free return policy.
 - Shipping Info: Free shipping on orders above ₹${freeDeliveryAbove}, otherwise ₹${deliveryCharge} delivery fee.
 
+Product Categories:
+${categoriesText}
+
 Available Product Catalog:
 ${productsText}
 
@@ -95,45 +107,46 @@ ${userOrdersText}
 
 Guidelines:
 - Maintain a luxury, professional, polite, and extremely friendly tone.
+- Help customers with their shopping and store-related queries.
 - When recommending products, highlight their premium value, list their prices, and encourage users to check them out.
-- Keep answers concise, and format beautiful Markdown responses with clean spacing and bullet points.
+- Keep answers concise, helpful, and format beautiful Markdown responses with clean spacing and bullet points.
 - If a customer asks about order status:
   - If they are signed in, refer to the Order details above.
   - If they are not signed in or need specific details, explain how they can sign in or contact support at ${supportEmail} with their order ID.`;
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const groqApiKey = process.env.GROQ_API_KEY;
 
-    if (apiKey) {
+    if (groqApiKey) {
       try {
-        // Prepare Anthropic Claude call
-        // Translate roles to Anthropic's expected format (user, assistant)
-        const claudeMessages = messages.map((m) => ({
-          role: m.role === "user" ? "user" : "assistant",
-          content: m.content,
-        }));
+        const groqMessages = [
+          { role: "system", content: systemPrompt },
+          ...messages.map((m) => ({
+            role: m.role === "user" ? ("user" as const) : ("assistant" as const),
+            content: m.content,
+          })),
+        ];
 
         const response = await axios.post(
-          "https://api.anthropic.com/v1/messages",
+          "https://api.groq.com/openai/v1/chat/completions",
           {
-            model: "claude-3-5-sonnet-20241022",
+            model: "llama-3.3-70b-versatile",
+            messages: groqMessages,
             max_tokens: 1024,
-            system: systemPrompt,
-            messages: claudeMessages,
+            temperature: 0.7,
           },
           {
             headers: {
-              "x-api-key": apiKey,
-              "anthropic-version": "2023-06-01",
-              "content-type": "application/json",
+              Authorization: `Bearer ${groqApiKey}`,
+              "Content-Type": "application/json",
             },
           }
         );
 
-        const reply = response.data.content[0]?.text || "I apologize, I am unable to process your request at the moment.";
+        const reply = response.data.choices?.[0]?.message?.content || "I apologize, I am unable to process your request at the moment.";
         res.json({ reply });
         return;
       } catch (err: any) {
-        logger.error({ err: err.response?.data || err.message }, "Anthropic API call failed. Falling back to rule-based simulation.");
+        logger.error({ err: err.response?.data || err.message }, "Groq API call failed. Falling back to intelligent rule-based simulation.");
       }
     }
 
