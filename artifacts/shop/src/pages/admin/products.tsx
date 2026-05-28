@@ -17,9 +17,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Pencil, Trash2, Plus, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Pencil, Trash2, Plus, Search, ChevronLeft, ChevronRight, GripVertical } from "lucide-react";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 interface Product {
@@ -360,6 +360,52 @@ export default function AdminProducts() {
   const [editing, setEditing] = useState<Product | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
+  const [localProducts, setLocalProducts] = useState<any[]>([]);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (productsData?.products) {
+      setLocalProducts(productsData.products);
+    }
+  }, [productsData]);
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = async (targetIndex: number) => {
+    if (draggedIndex === null || draggedIndex === targetIndex) return;
+
+    const reordered = [...localProducts];
+    const [removed] = reordered.splice(draggedIndex, 1);
+    reordered.splice(targetIndex, 0, removed);
+
+    setLocalProducts(reordered);
+    setDraggedIndex(null);
+
+    const updates = reordered.map((p, index) => ({
+      id: p.id,
+      sortOrder: index,
+    }));
+
+    try {
+      await customFetch("/api/admin/products/reorder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ products: updates }),
+      });
+      toast.success("Display order saved successfully");
+      refetch();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update display order");
+      refetch();
+    }
+  };
+
   const handleSave = (data: ProductInput) => {
     if (dialog === "edit" && editing) {
       updateProduct.mutate(
@@ -415,6 +461,7 @@ export default function AdminProducts() {
           <table className="w-full text-sm">
             <thead className="bg-muted/60 text-muted-foreground text-left">
               <tr>
+                <th className="w-10 px-4"></th>
                 <th className="px-6 py-3 font-medium">Product</th>
                 <th className="px-6 py-3 font-medium">Price</th>
                 <th className="px-6 py-3 font-medium">Stock</th>
@@ -427,13 +474,26 @@ export default function AdminProducts() {
               {isLoading
                 ? Array.from({ length: 5 }).map((_, i) => (
                     <tr key={i}>
+                      <td className="w-10 px-4"><Skeleton className="h-4 w-4" /></td>
                       {Array.from({ length: 6 }).map((__, j) => (
                         <td key={j} className="px-6 py-4"><Skeleton className="h-4 w-24" /></td>
                       ))}
                     </tr>
                   ))
-                : productsData?.products.map((product) => (
-                    <tr key={product.id} className="hover:bg-muted/30 transition-colors">
+                : localProducts.map((product, index) => (
+                    <tr 
+                      key={product.id} 
+                      draggable
+                      onDragStart={() => handleDragStart(index)}
+                      onDragOver={handleDragOver}
+                      onDrop={() => handleDrop(index)}
+                      className={`hover:bg-muted/30 transition-colors cursor-move ${
+                        draggedIndex === index ? "opacity-50 bg-muted/80 border-2 border-dashed border-primary" : ""
+                      }`}
+                    >
+                      <td className="w-10 px-4 text-muted-foreground text-center">
+                        <GripVertical className="w-4 h-4 inline-block opacity-45 hover:opacity-100 transition-opacity" />
+                      </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-muted rounded-lg overflow-hidden flex-shrink-0">
@@ -493,7 +553,7 @@ export default function AdminProducts() {
                   ))}
             </tbody>
           </table>
-          {!isLoading && productsData?.products.length === 0 && (
+          {!isLoading && localProducts.length === 0 && (
             <div className="text-center py-16 text-muted-foreground">No products found.</div>
           )}
         </div>

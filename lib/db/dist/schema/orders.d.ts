@@ -212,9 +212,9 @@ export declare const addressesTable: import("drizzle-orm/pg-core").PgTableWithCo
 }>;
 export declare const insertAddressSchema: z.ZodObject<{
     userId: z.ZodString;
+    email: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     fullName: z.ZodString;
     phone: z.ZodString;
-    email: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     addressLine: z.ZodString;
     landmark: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     city: z.ZodString;
@@ -743,8 +743,8 @@ export declare const orderItemsTable: import("drizzle-orm/pg-core").PgTableWithC
 }>;
 export declare const insertOrderItemSchema: z.ZodObject<{
     price: z.ZodString;
-    orderId: z.ZodInt;
     productId: z.ZodOptional<z.ZodNullable<z.ZodInt>>;
+    orderId: z.ZodInt;
     productName: z.ZodString;
     productImage: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     quantity: z.ZodInt;
@@ -1001,13 +1001,13 @@ export declare const returnsTable: import("drizzle-orm/pg-core").PgTableWithColu
     dialect: "pg";
 }>;
 export declare const insertReturnSchema: z.ZodObject<{
+    imageUrl: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     userId: z.ZodString;
+    productId: z.ZodInt;
     status: z.ZodOptional<z.ZodString>;
     orderId: z.ZodInt;
-    productId: z.ZodInt;
     orderItemId: z.ZodInt;
     reason: z.ZodString;
-    imageUrl: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     bankName: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     accountNumber: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     ifscCode: z.ZodOptional<z.ZodNullable<z.ZodString>>;

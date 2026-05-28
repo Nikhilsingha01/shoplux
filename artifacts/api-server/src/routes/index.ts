@@ -13,6 +13,7 @@ import supportRouter from "./support";
 import reviewsRouter from "./reviews";
 import flashSalesRouter from "./flash-sales";
 import testimonialsRouter from "./testimonials";
+import chatbotRouter from "./chatbot";
 
 const router: IRouter = Router();
 
@@ -30,6 +31,7 @@ router.use(supportRouter);
 router.use(reviewsRouter);
 router.use(flashSalesRouter);
 router.use(testimonialsRouter);
+router.use(chatbotRouter);
 
 export default router;
 

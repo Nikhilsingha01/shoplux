@@ -128,8 +128,8 @@ export declare const reviewsTable: import("drizzle-orm/pg-core").PgTableWithColu
 export declare const insertReviewSchema: z.ZodObject<{
     rating: z.ZodInt;
     userId: z.ZodString;
-    customerName: z.ZodString;
     productId: z.ZodInt;
+    customerName: z.ZodString;
     reviewText: z.ZodString;
 }, {
     out: {};

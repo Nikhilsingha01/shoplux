@@ -7,7 +7,10 @@ interface MeResponse {
   clerkUserId?: string;
   user?: Record<string, unknown> | null;
   storeName?: string;
+  logoUrl?: string | null;
   whatsappNumber?: string;
+  instagramUrl?: string;
+  isChatbotEnabled?: boolean;
   deliveryCharge?: number;
   freeDeliveryAbove?: number;
   trustBadge1?: string;
@@ -38,7 +41,10 @@ export function useAdminStatus() {
     isAdmin: data?.isAdmin ?? false,
     isLoading,
     storeName: data?.storeName ?? "ShopLux",
+    logoUrl: data?.logoUrl ?? null,
     whatsappNumber: data?.whatsappNumber ?? "",
+    instagramUrl: data?.instagramUrl ?? "",
+    isChatbotEnabled: data?.isChatbotEnabled ?? false,
     deliveryCharge: data?.deliveryCharge ?? 49,
     freeDeliveryAbove: data?.freeDeliveryAbove ?? 999,
     trustBadge1: data?.trustBadge1 ?? "Free delivery on orders above ₹999",

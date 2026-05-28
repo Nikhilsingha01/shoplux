@@ -1,9 +1,23 @@
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
-import { Home, Search, ShoppingBag, User } from "lucide-react";
+import { 
+  Home, 
+  Search, 
+  ShoppingBag, 
+  User, 
+  MessageCircle, 
+  Instagram, 
+  Plus, 
+  X, 
+  Bot, 
+  Sparkles, 
+  Send, 
+  Loader2 
+} from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useCart } from "@/lib/cart";
 import { useAdminStatus } from "@/lib/useAdmin";
+import { useState, useRef, useEffect } from "react";
 
 function MobileNav() {
   const [location] = useLocation();
@@ -45,14 +59,262 @@ function MobileNav() {
   );
 }
 
-export function AppLayout({ children }: { children: React.ReactNode }) {
-  const { whatsappNumber } = useAdminStatus();
-  
+// ----------------------------------------------------
+// FLOATING SOCIAL BUTTON (Bottom Right)
+// ----------------------------------------------------
+function FloatingSocialMenu({ 
+  whatsappNumber, 
+  instagramUrl 
+}: { 
+  whatsappNumber?: string; 
+  instagramUrl?: string; 
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
   // Clean phone number (strip spaces/dashes)
   const cleanPhone = whatsappNumber ? whatsappNumber.replace(/\s+/g, "").replace(/[+]/g, "") : "";
   const whatsappUrl = cleanPhone 
     ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent("Hi, I need help with my order")}`
     : null;
+
+  if (!whatsappUrl && !instagramUrl) return null;
+
+  return (
+    <div className="fixed bottom-20 md:bottom-6 right-6 z-40 flex flex-col items-center gap-3">
+      {/* Sub-buttons list container with expand animation */}
+      <div 
+        className={`flex flex-col items-center gap-3 transition-all duration-300 origin-bottom ${
+          isOpen 
+            ? "opacity-100 translate-y-0 scale-100" 
+            : "opacity-0 translate-y-4 scale-75 pointer-events-none"
+        }`}
+      >
+        {/* Instagram button */}
+        {instagramUrl && (
+          <a
+            href={instagramUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-11 h-11 md:w-12 md:h-12 bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#bc1888] text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 relative group"
+            aria-label="Follow us on Instagram"
+          >
+            <Instagram className="w-5 h-5 md:w-5.5 md:h-5.5" />
+            <span className="absolute right-14 bg-background text-foreground text-xs px-2.5 py-1 rounded-md border shadow-md font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+              Instagram
+            </span>
+          </a>
+        )}
+
+        {/* WhatsApp button */}
+        {whatsappUrl && (
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-11 h-11 md:w-12 md:h-12 bg-[#25D366] text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 relative group"
+            aria-label="Chat on WhatsApp"
+          >
+            <MessageCircle className="w-5 h-5 md:w-5.5 md:h-5.5" />
+            <span className="absolute right-14 bg-background text-foreground text-xs px-2.5 py-1 rounded-md border shadow-md font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+              WhatsApp Chat
+            </span>
+          </a>
+        )}
+      </div>
+
+      {/* Main trigger FAB button */}
+      <button
+        onClick={() => setIsOpen((prev) => !prev)}
+        className={`w-12 h-12 md:w-14 md:h-14 rounded-full shadow-2xl flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-115 active:scale-95 bg-primary text-primary-foreground ${
+          isOpen ? "bg-muted-foreground rotate-45" : "bg-primary"
+        }`}
+        aria-label="Toggle contact menu"
+      >
+        <Plus className="w-6 h-6 md:w-7 md:h-7" />
+      </button>
+    </div>
+  );
+}
+
+// ----------------------------------------------------
+// AI CHATBOT WIDGET (Bottom Left)
+// ----------------------------------------------------
+function ChatbotWidget({ storeName }: { storeName: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([
+    {
+      role: "assistant",
+      content: `Hello! I am your premium AI Shopping Assistant at **${storeName}**. How may I elevate your shopping journey today? ✨`,
+    },
+  ]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to bottom on new message
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, loading]);
+
+  const quickQuestions = [
+    "🛍️ Recommend products",
+    "🚚 Shipping & charges",
+    "🔄 Return policy",
+    "📦 Order status",
+  ];
+
+  const handleSendMessage = async (textToSend: string) => {
+    if (!textToSend.trim() || loading) return;
+
+    const userMessage = { role: "user" as const, content: textToSend };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/chatbot/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [...messages, userMessage],
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to chat");
+      const data = await response.json();
+      setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
+    } catch (err) {
+      console.error(err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "I apologize, but I encountered an error connecting to our system. Please write to us or try again in a few moments.",
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      {/* Floating Chat Trigger Button */}
+      <button
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="fixed bottom-20 md:bottom-6 left-6 z-40 bg-gradient-to-tr from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white p-3 md:p-3.5 rounded-full shadow-2xl transition-all duration-300 hover:scale-115 active:scale-95 flex items-center justify-center cursor-pointer hover:rotate-12 group"
+        aria-label="Open AI Assistant"
+      >
+        <Sparkles className="w-5 h-5 md:w-6 md:h-6" />
+      </button>
+
+      {/* Polish Chat Widget Box */}
+      {isOpen && (
+        <div className="fixed bottom-32 md:bottom-24 left-6 w-[360px] max-w-[calc(100vw-2rem)] h-[480px] bg-background border rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50 transition-all duration-300 animate-in fade-in slide-in-from-bottom-5">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-amber-500 to-yellow-600 p-4 text-white flex items-center justify-between shadow-md">
+            <div className="flex items-center gap-2">
+              <Bot className="w-5 h-5 stroke-[2.5]" />
+              <div>
+                <h3 className="text-sm font-bold tracking-wide">{storeName} Assistant</h3>
+                <span className="text-[10px] opacity-85 flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 bg-green-400 rounded-full animate-pulse" />
+                  Online & Active
+                </span>
+              </div>
+            </div>
+            <button 
+              onClick={() => setIsOpen(false)}
+              className="p-1 rounded-full hover:bg-white/10 active:scale-95 transition-all"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Messages Area */}
+          <div 
+            ref={scrollRef}
+            className="flex-1 p-4 overflow-y-auto space-y-4 bg-muted/20"
+          >
+            {messages.map((m, index) => {
+              const isUser = m.role === "user";
+              return (
+                <div 
+                  key={index}
+                  className={`flex ${isUser ? "justify-end" : "justify-start"}`}
+                >
+                  <div 
+                    className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm ${
+                      isUser 
+                        ? "bg-primary text-primary-foreground rounded-br-none" 
+                        : "bg-background text-foreground border rounded-bl-none prose prose-sm prose-neutral"
+                    }`}
+                    style={{ whiteSpace: "pre-wrap" }}
+                  >
+                    {m.content}
+                  </div>
+                </div>
+              );
+            })}
+
+            {loading && (
+              <div className="flex justify-start">
+                <div className="bg-background text-foreground border rounded-2xl rounded-bl-none px-4 py-3 flex items-center gap-2 shadow-sm text-xs">
+                  <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
+                  Assistant is thinking...
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Option Tags */}
+          {messages.length === 1 && (
+            <div className="px-4 py-2 bg-muted/40 border-t flex flex-wrap gap-1.5">
+              {quickQuestions.map((q) => (
+                <button
+                  key={q}
+                  onClick={() => handleSendMessage(q.slice(3))}
+                  className="text-[11px] font-medium border bg-background hover:bg-accent text-foreground px-2 py-1 rounded-full transition-colors active:scale-95 cursor-pointer"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Input Footer */}
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSendMessage(input);
+            }}
+            className="p-3 border-t bg-background flex items-center gap-2"
+          >
+            <input
+              type="text"
+              placeholder="Ask anything..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              className="flex-1 bg-muted/50 border rounded-full px-4 py-2 text-xs focus:outline-none focus:border-primary focus:bg-background transition-all"
+            />
+            <button
+              type="submit"
+              disabled={!input.trim() || loading}
+              className="p-2 rounded-full bg-primary text-primary-foreground hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center cursor-pointer"
+            >
+              <Send className="w-3.5 h-3.5" />
+            </button>
+          </form>
+        </div>
+      )}
+    </>
+  );
+}
+
+export function AppLayout({ children }: { children: React.ReactNode }) {
+  const { whatsappNumber, instagramUrl, isChatbotEnabled, storeName } = useAdminStatus();
 
   return (
     <div className="min-h-[100dvh] flex flex-col w-full overflow-x-hidden relative">
@@ -63,22 +325,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <Footer />
       <MobileNav />
 
-      {/* Floating WhatsApp button */}
-      {whatsappUrl && (
-        <a 
-          href={whatsappUrl} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="fixed bottom-20 md:bottom-6 right-6 z-40 bg-[#25D366] hover:bg-[#20ba5a] text-white p-3 md:p-3.5 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 flex items-center justify-center cursor-pointer group"
-          aria-label="Chat on WhatsApp"
-        >
-          <svg className="w-5 h-5 md:w-6 md:h-6 fill-current" viewBox="0 0 24 24">
-            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.625 1.451 5.403.002 9.794-4.382 9.797-9.786.002-2.618-1.01-5.078-2.852-6.92C16.376 2.057 13.924.935 11.3.935c-5.41.002-9.799 4.393-9.802 9.797-.001 1.558.423 3.082 1.229 4.437l-.978 3.57L5.6 19.8l.192.115.855-.761zm11.904-6.84c-.314-.157-1.855-.915-2.143-1.02-.288-.106-.499-.157-.709.157-.21.314-.813 1.02-.996 1.23-.183.21-.366.236-.68.079-.314-.158-1.325-.488-2.525-1.559-.933-.833-1.563-1.862-1.747-2.176-.183-.314-.02-.484.137-.64.142-.141.314-.367.472-.55.157-.183.21-.314.314-.524.105-.21.052-.393-.026-.55-.079-.157-.709-1.708-.971-2.337-.256-.615-.515-.531-.709-.541-.183-.01-.393-.01-.603-.01-.21 0-.55.079-.838.393-.288.314-1.101 1.077-1.101 2.622 0 1.545 1.127 3.039 1.284 3.249.157.21 2.219 3.39 5.378 4.754.752.325 1.339.519 1.797.665.756.24 1.444.207 1.989.126.607-.09 1.854-.759 2.116-1.468.262-.708.262-1.31.183-1.468-.078-.157-.288-.261-.602-.418z" />
-          </svg>
-          <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-500 ease-in-out text-xs font-semibold whitespace-nowrap group-hover:ml-2">
-            Chat with us
-          </span>
-        </a>
+      {/* Floating social menu in bottom-right corner */}
+      <FloatingSocialMenu 
+        whatsappNumber={whatsappNumber} 
+        instagramUrl={instagramUrl} 
+      />
+
+      {/* AI customer chatbot widget in bottom-left corner */}
+      {isChatbotEnabled && (
+        <ChatbotWidget storeName={storeName} />
       )}
     </div>
   );

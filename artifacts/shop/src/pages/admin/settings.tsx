@@ -1,4 +1,4 @@
-import { useGetAdminSettings, useUpdateAdminSettings } from "@workspace/api-client-react";
+import { useGetAdminSettings, useUpdateAdminSettings, customFetch } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { useState, useEffect } from "react";
@@ -14,6 +14,7 @@ export default function AdminSettings() {
   const [form, setForm] = useState({
     storeName: "",
     storeTagline: "",
+    logoUrl: undefined as string | undefined,
     currency: "INR",
     deliveryCharge: 49,
     freeDeliveryAbove: 999,
@@ -21,6 +22,7 @@ export default function AdminSettings() {
     whatsappNumber: "",
     instagramUrl: "",
     adminClerkUserId: "",
+    isChatbotEnabled: true,
     trustBadge1: "Free delivery on orders above ₹999",
     trustBadge2: "Secure & encrypted payments",
     trustBadge3: "7-day hassle-free returns",
@@ -32,6 +34,7 @@ export default function AdminSettings() {
       setForm({
         storeName: settings.storeName ?? "ShopLux",
         storeTagline: (s.storeTagline as string) ?? "",
+        logoUrl: (s.logoUrl as string) || undefined,
         currency: (s.currency as string) ?? "INR",
         deliveryCharge: settings.deliveryCharge ?? 49,
         freeDeliveryAbove: settings.freeDeliveryAbove ?? 999,
@@ -39,6 +42,7 @@ export default function AdminSettings() {
         whatsappNumber: (s.whatsappNumber as string) ?? "",
         instagramUrl: (s.instagramUrl as string) ?? "",
         adminClerkUserId: (s.adminClerkUserId as string) ?? "",
+        isChatbotEnabled: s.isChatbotEnabled !== false,
         trustBadge1: (s.trustBadge1 as string) ?? "Free delivery on orders above ₹999",
         trustBadge2: (s.trustBadge2 as string) ?? "Secure & encrypted payments",
         trustBadge3: (s.trustBadge3 as string) ?? "7-day hassle-free returns",
@@ -115,6 +119,43 @@ export default function AdminSettings() {
                   onChange={(e) => setForm((f) => ({ ...f, storeTagline: e.target.value }))}
                   placeholder="Premium Shopping, Delivered."
                 />
+              </Field>
+              <Field label="Custom Store Logo" help="Stylish custom logo shown in the Navbar. Fallback is stylish golden text.">
+                <div className="flex flex-col gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="w-full border border-border px-3 py-2 rounded-md text-sm focus:outline-none focus:border-primary file:mr-4 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                    onChange={async (e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        const file = e.target.files[0];
+                        const formData = new FormData();
+                        formData.append("image", file);
+                        try {
+                          const data = await customFetch<{ url: string }>("/api/admin/upload", {
+                            method: "POST",
+                            body: formData,
+                          });
+                          setForm((f) => ({ ...f, logoUrl: data.url }));
+                          toast.success("Logo uploaded successfully");
+                        } catch (err: any) {
+                          toast.error(err?.message || "Error uploading logo");
+                        }
+                      }
+                    }}
+                  />
+                  <input
+                    className="w-full border border-border px-3 py-2 rounded-md text-sm focus:outline-none focus:border-primary"
+                    value={form.logoUrl || ""}
+                    onChange={(e) => setForm((f) => ({ ...f, logoUrl: e.target.value || undefined }))}
+                    placeholder="Or enter logo URL directly"
+                  />
+                  {form.logoUrl && (
+                    <div className="mt-2 p-3 bg-muted/40 border rounded-lg flex items-center justify-center">
+                      <img src={form.logoUrl} alt="Store Logo Preview" className="h-10 object-contain max-w-full" />
+                    </div>
+                  )}
+                </div>
               </Field>
             </section>
 
@@ -212,6 +253,27 @@ export default function AdminSettings() {
                   placeholder="https://instagram.com/shoplux"
                 />
               </Field>
+            </section>
+
+            {/* AI Assistant Configurations */}
+            <section className="bg-background border rounded-xl p-6 space-y-5 shadow-sm">
+              <h2 className="font-semibold text-base border-b pb-3 flex items-center gap-2">
+                🤖 AI Customer Chatbot Settings
+              </h2>
+              <div className="flex items-center justify-between p-4 bg-muted/40 rounded-lg border">
+                <div>
+                  <h3 className="text-sm font-semibold">Enable AI Customer Chatbot</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Toggle to activate the premium AI Shopping Assistant for storefront visitors.
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer accent-primary"
+                  checked={form.isChatbotEnabled}
+                  onChange={(e) => setForm((f) => ({ ...f, isChatbotEnabled: e.target.checked }))}
+                />
+              </div>
             </section>
 
             <div className="flex justify-end">

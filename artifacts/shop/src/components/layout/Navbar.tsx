@@ -12,7 +12,10 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 
+import { useAdminStatus } from "@/lib/useAdmin";
+
 export function Navbar() {
+  const { logoUrl, storeName } = useAdminStatus();
   const cartItemsCount = useCart((state) => state.getTotalItems());
   const { user, isSignedIn } = useUser();
   const { signOut } = useClerk();
@@ -70,7 +73,13 @@ export function Navbar() {
             </SheetContent>
           </Sheet>
           <Link href="/" className="flex items-center gap-2">
-            <img src={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/logo.svg`} alt="ShopLux" className="h-8" />
+            {logoUrl ? (
+              <img src={logoUrl} alt={storeName} className="h-8 max-w-[150px] object-contain" />
+            ) : (
+              <span className="font-extrabold text-xl tracking-wider bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 bg-clip-text text-transparent select-none drop-shadow-sm font-sans">
+                {storeName}
+              </span>
+            )}
           </Link>
           <nav className="hidden md:flex items-center gap-6 ml-8">
             <Link href="/products" className="text-sm font-medium hover:text-primary transition-colors">Shop</Link>

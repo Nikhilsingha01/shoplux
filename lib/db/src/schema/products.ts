@@ -38,6 +38,7 @@ export const productsTable = pgTable("products", {
   isDeliveryChargeApplicable: boolean("is_delivery_charge_applicable").default(false),
   isDeleted: boolean("is_deleted").notNull().default(false),
   flashSaleId: integer("flash_sale_id"),
+  sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

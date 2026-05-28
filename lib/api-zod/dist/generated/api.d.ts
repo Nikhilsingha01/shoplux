@@ -3306,6 +3306,7 @@ export declare const GetAdminSettingsResponse: zod.ZodObject<{
     trustBadge1: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
     trustBadge2: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
     trustBadge3: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+    isChatbotEnabled: zod.ZodOptional<zod.ZodBoolean>;
 }, "strip", zod.ZodTypeAny, {
     id: number;
     storeName: string;
@@ -3321,6 +3322,7 @@ export declare const GetAdminSettingsResponse: zod.ZodObject<{
     trustBadge1?: string | null | undefined;
     trustBadge2?: string | null | undefined;
     trustBadge3?: string | null | undefined;
+    isChatbotEnabled?: boolean | undefined;
 }, {
     id: number;
     storeName: string;
@@ -3336,6 +3338,7 @@ export declare const GetAdminSettingsResponse: zod.ZodObject<{
     trustBadge1?: string | null | undefined;
     trustBadge2?: string | null | undefined;
     trustBadge3?: string | null | undefined;
+    isChatbotEnabled?: boolean | undefined;
 }>;
 /**
  * @summary Update store settings
@@ -3354,6 +3357,7 @@ export declare const UpdateAdminSettingsBody: zod.ZodObject<{
     trustBadge1: zod.ZodOptional<zod.ZodString>;
     trustBadge2: zod.ZodOptional<zod.ZodString>;
     trustBadge3: zod.ZodOptional<zod.ZodString>;
+    isChatbotEnabled: zod.ZodOptional<zod.ZodBoolean>;
 }, "strip", zod.ZodTypeAny, {
     deliveryCharge?: number | undefined;
     currency?: string | undefined;
@@ -3368,6 +3372,7 @@ export declare const UpdateAdminSettingsBody: zod.ZodObject<{
     trustBadge1?: string | undefined;
     trustBadge2?: string | undefined;
     trustBadge3?: string | undefined;
+    isChatbotEnabled?: boolean | undefined;
 }, {
     deliveryCharge?: number | undefined;
     currency?: string | undefined;
@@ -3382,6 +3387,7 @@ export declare const UpdateAdminSettingsBody: zod.ZodObject<{
     trustBadge1?: string | undefined;
     trustBadge2?: string | undefined;
     trustBadge3?: string | undefined;
+    isChatbotEnabled?: boolean | undefined;
 }>;
 export declare const UpdateAdminSettingsResponse: zod.ZodObject<{
     id: zod.ZodNumber;
@@ -3398,6 +3404,7 @@ export declare const UpdateAdminSettingsResponse: zod.ZodObject<{
     trustBadge1: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
     trustBadge2: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
     trustBadge3: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+    isChatbotEnabled: zod.ZodOptional<zod.ZodBoolean>;
 }, "strip", zod.ZodTypeAny, {
     id: number;
     storeName: string;
@@ -3413,6 +3420,7 @@ export declare const UpdateAdminSettingsResponse: zod.ZodObject<{
     trustBadge1?: string | null | undefined;
     trustBadge2?: string | null | undefined;
     trustBadge3?: string | null | undefined;
+    isChatbotEnabled?: boolean | undefined;
 }, {
     id: number;
     storeName: string;
@@ -3428,6 +3436,56 @@ export declare const UpdateAdminSettingsResponse: zod.ZodObject<{
     trustBadge1?: string | null | undefined;
     trustBadge2?: string | null | undefined;
     trustBadge3?: string | null | undefined;
+    isChatbotEnabled?: boolean | undefined;
+}>;
+/**
+ * @summary Reorder products (admin only)
+ */
+export declare const ReorderProductsBody: zod.ZodObject<{
+    ids: zod.ZodArray<zod.ZodNumber, "many">;
+}, "strip", zod.ZodTypeAny, {
+    ids: number[];
+}, {
+    ids: number[];
+}>;
+export declare const ReorderProductsResponse: zod.ZodObject<{
+    success: zod.ZodOptional<zod.ZodBoolean>;
+}, "strip", zod.ZodTypeAny, {
+    success?: boolean | undefined;
+}, {
+    success?: boolean | undefined;
+}>;
+/**
+ * @summary Send a message to the AI Chatbot
+ */
+export declare const SendChatMessageBody: zod.ZodObject<{
+    messages: zod.ZodArray<zod.ZodObject<{
+        role: zod.ZodString;
+        content: zod.ZodString;
+    }, "strip", zod.ZodTypeAny, {
+        role: string;
+        content: string;
+    }, {
+        role: string;
+        content: string;
+    }>, "many">;
+}, "strip", zod.ZodTypeAny, {
+    messages: {
+        role: string;
+        content: string;
+    }[];
+}, {
+    messages: {
+        role: string;
+        content: string;
+    }[];
+}>;
+export declare const SendChatMessageResponse: zod.ZodObject<{
+    reply: zod.ZodString;
+}, "strip", zod.ZodTypeAny, {
+    reply: string;
+}, {
+    reply: string;
 }>;
 /**
  * @summary List all users (admin only)

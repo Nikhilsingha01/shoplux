@@ -143,12 +143,12 @@ export declare const bannersTable: import("drizzle-orm/pg-core").PgTableWithColu
     dialect: "pg";
 }>;
 export declare const insertBannerSchema: z.ZodObject<{
-    imageUrl: z.ZodString;
+    sortOrder: z.ZodOptional<z.ZodInt>;
     title: z.ZodString;
     subtitle: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    imageUrl: z.ZodString;
     linkUrl: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     isActive: z.ZodOptional<z.ZodBoolean>;
-    sortOrder: z.ZodOptional<z.ZodInt>;
 }, {
     out: {};
     in: {};
@@ -708,6 +708,23 @@ export declare const adminSettingsTable: import("drizzle-orm/pg-core").PgTableWi
             identity: undefined;
             generated: undefined;
         }, {}, {}>;
+        isChatbotEnabled: import("drizzle-orm/pg-core").PgColumn<{
+            name: "is_chatbot_enabled";
+            tableName: "admin_settings";
+            dataType: "boolean";
+            columnType: "PgBoolean";
+            data: boolean;
+            driverParam: boolean;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
         updatedAt: import("drizzle-orm/pg-core").PgColumn<{
             name: "updated_at";
             tableName: "admin_settings";
@@ -742,6 +759,7 @@ export declare const insertAdminSettingsSchema: z.ZodObject<{
     trustBadge1: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     trustBadge2: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     trustBadge3: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    isChatbotEnabled: z.ZodOptional<z.ZodBoolean>;
 }, {
     out: {};
     in: {};
@@ -892,10 +910,10 @@ export declare const appUsersTable: import("drizzle-orm/pg-core").PgTableWithCol
     dialect: "pg";
 }>;
 export declare const insertAppUserSchema: z.ZodObject<{
+    clerkUserId: z.ZodString;
+    email: z.ZodString;
     fullName: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     phone: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-    email: z.ZodString;
-    clerkUserId: z.ZodString;
     isAdmin: z.ZodOptional<z.ZodBoolean>;
     loyaltyPoints: z.ZodOptional<z.ZodInt>;
 }, {

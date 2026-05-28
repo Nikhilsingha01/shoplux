@@ -20,4 +20,5 @@ export interface AdminSettingsUpdate {
   trustBadge1?: string;
   trustBadge2?: string;
   trustBadge3?: string;
+  isChatbotEnabled?: boolean;
 }

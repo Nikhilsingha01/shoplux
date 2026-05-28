@@ -385,6 +385,7 @@ export interface AdminSettings {
     trustBadge2?: string | null;
     /** @nullable */
     trustBadge3?: string | null;
+    isChatbotEnabled?: boolean;
 }
 export interface AdminSettingsUpdate {
     storeName?: string;
@@ -400,6 +401,7 @@ export interface AdminSettingsUpdate {
     trustBadge1?: string;
     trustBadge2?: string;
     trustBadge3?: string;
+    isChatbotEnabled?: boolean;
 }
 export interface AppUser {
     id: number;
@@ -418,6 +420,16 @@ export interface UserListResponse {
     page: number;
     limit: number;
 }
+export interface ReorderProductsInput {
+    ids: number[];
+}
+export type SendChatMessageInputMessagesItem = {
+    role: string;
+    content: string;
+};
+export interface SendChatMessageInput {
+    messages: SendChatMessageInputMessagesItem[];
+}
 export type ListProductsParams = {
     category?: string;
     search?: string;
@@ -430,6 +442,12 @@ export type ListOrdersParams = {
     status?: string;
     page?: number;
     limit?: number;
+};
+export type ReorderProducts200 = {
+    success?: boolean;
+};
+export type SendChatMessage200 = {
+    reply: string;
 };
 export type ListUsersParams = {
     page?: number;

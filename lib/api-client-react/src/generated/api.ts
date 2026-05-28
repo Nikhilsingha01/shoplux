@@ -53,6 +53,10 @@ import type {
   ProductInput,
   ProductListResponse,
   ProductUpdate,
+  ReorderProducts200,
+  ReorderProductsInput,
+  SendChatMessage200,
+  SendChatMessageInput,
   UserListResponse,
   WishlistInput,
   WishlistItem
@@ -2715,6 +2719,148 @@ export const useUpdateAdminSettings = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getUpdateAdminSettingsMutationOptions(options));
+    }
+
+export const getReorderProductsUrl = () => {
+
+
+
+
+  return `/api/admin/products/reorder`
+}
+
+/**
+ * @summary Reorder products (admin only)
+ */
+export const reorderProducts = async (reorderProductsInput: ReorderProductsInput, options?: RequestInit): Promise<ReorderProducts200> => {
+
+  return customFetch<ReorderProducts200>(getReorderProductsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      reorderProductsInput,)
+  }
+);}
+
+
+
+
+export const getReorderProductsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reorderProducts>>, TError,{data: BodyType<ReorderProductsInput>}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof reorderProducts>>, TError,{data: BodyType<ReorderProductsInput>}, TContext> => {
+
+const mutationKey = ['reorderProducts'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reorderProducts>>, {data: BodyType<ReorderProductsInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  reorderProducts(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReorderProductsMutationResult = NonNullable<Awaited<ReturnType<typeof reorderProducts>>>
+    export type ReorderProductsMutationBody = BodyType<ReorderProductsInput>
+    export type ReorderProductsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Reorder products (admin only)
+ */
+export const useReorderProducts = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reorderProducts>>, TError,{data: BodyType<ReorderProductsInput>}, TContext>, }
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reorderProducts>>,
+        TError,
+        {data: BodyType<ReorderProductsInput>},
+        TContext
+      > => {
+      return useMutation(getReorderProductsMutationOptions(options));
+    }
+
+export const getSendChatMessageUrl = () => {
+
+
+
+
+  return `/api/chatbot/chat`
+}
+
+/**
+ * @summary Send a message to the AI Chatbot
+ */
+export const sendChatMessage = async (sendChatMessageInput: SendChatMessageInput, options?: RequestInit): Promise<SendChatMessage200> => {
+
+  return customFetch<SendChatMessage200>(getSendChatMessageUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      sendChatMessageInput,)
+  }
+);}
+
+
+
+
+export const getSendChatMessageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendChatMessage>>, TError,{data: BodyType<SendChatMessageInput>}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof sendChatMessage>>, TError,{data: BodyType<SendChatMessageInput>}, TContext> => {
+
+const mutationKey = ['sendChatMessage'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendChatMessage>>, {data: BodyType<SendChatMessageInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  sendChatMessage(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendChatMessageMutationResult = NonNullable<Awaited<ReturnType<typeof sendChatMessage>>>
+    export type SendChatMessageMutationBody = BodyType<SendChatMessageInput>
+    export type SendChatMessageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Send a message to the AI Chatbot
+ */
+export const useSendChatMessage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendChatMessage>>, TError,{data: BodyType<SendChatMessageInput>}, TContext>, }
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendChatMessage>>,
+        TError,
+        {data: BodyType<SendChatMessageInput>},
+        TContext
+      > => {
+      return useMutation(getSendChatMessageMutationOptions(options));
     }
 
 export const getListUsersUrl = (params?: ListUsersParams,) => {

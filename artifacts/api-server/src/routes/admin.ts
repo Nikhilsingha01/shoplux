@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { desc, sql, eq, and, or, isNull } from "drizzle-orm";
 import { db, adminSettingsTable, ordersTable, productsTable, appUsersTable, categoriesTable } from "@workspace/db";
-import { UpdateAdminSettingsBody, ListUsersQueryParams } from "@workspace/api-zod";
+import { UpdateAdminSettingsBody, ListUsersQueryParams, ReorderProductsBody } from "@workspace/api-zod";
 import { requireAdmin, requireAuth } from "../middlewares/auth";
 import multer from "multer";
 import { uploadToSupabase } from "../lib/supabase";
@@ -393,6 +393,31 @@ router.post("/admin/products/bulk-import", requireAdmin, upload.single("file"), 
     errorCount,
     results,
   });
+});
+
+router.post("/admin/products/reorder", requireAdmin, async (req, res): Promise<void> => {
+  const parsed = ReorderProductsBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const { ids } = parsed.data;
+
+  try {
+    await db.transaction(async (tx) => {
+      for (let i = 0; i < ids.length; i++) {
+        await tx
+          .update(productsTable)
+          .set({ sortOrder: i })
+          .where(eq(productsTable.id, ids[i]));
+      }
+    });
+
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || "Failed to reorder products" });
+  }
 });
 
 export default router;

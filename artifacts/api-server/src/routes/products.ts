@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq, ilike, and, desc, sql, or, isNull } from "drizzle-orm";
+import { eq, ilike, and, asc, desc, sql, or, isNull } from "drizzle-orm";
 import { db, productsTable, categoriesTable } from "@workspace/db";
 import {
   ListProductsQueryParams,
@@ -52,10 +52,10 @@ router.get("/products", async (req, res): Promise<void> => {
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  let orderBy;
-  if (sort === "price_asc") orderBy = productsTable.price;
-  else if (sort === "price_desc") orderBy = desc(productsTable.price);
-  else orderBy = desc(productsTable.createdAt);
+  let orderByClause;
+  if (sort === "price_asc") orderByClause = [asc(productsTable.price)];
+  else if (sort === "price_desc") orderByClause = [desc(productsTable.price)];
+  else orderByClause = [asc(productsTable.sortOrder), desc(productsTable.createdAt)];
 
   const [products, countResult] = await Promise.all([
     db
@@ -66,7 +66,7 @@ router.get("/products", async (req, res): Promise<void> => {
       .from(productsTable)
       .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
       .where(whereClause)
-      .orderBy(orderBy)
+      .orderBy(...orderByClause)
       .limit(limit)
       .offset(offset),
     db.select({ count: sql<number>`count(*)` }).from(productsTable).where(whereClause),
@@ -88,24 +88,28 @@ router.get("/products/featured", async (_req, res): Promise<void> => {
         .from(productsTable)
         .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
         .where(and(eq(productsTable.isFeatured, true), or(eq(productsTable.isDeleted, false), isNull(productsTable.isDeleted))))
+        .orderBy(asc(productsTable.sortOrder))
         .limit(8),
       db
         .select({ product: productsTable, categoryName: categoriesTable.name })
         .from(productsTable)
         .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
         .where(and(eq(productsTable.isTrending, true), or(eq(productsTable.isDeleted, false), isNull(productsTable.isDeleted))))
+        .orderBy(asc(productsTable.sortOrder))
         .limit(8),
       db
         .select({ product: productsTable, categoryName: categoriesTable.name })
         .from(productsTable)
         .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
         .where(and(eq(productsTable.isNewArrival, true), or(eq(productsTable.isDeleted, false), isNull(productsTable.isDeleted))))
+        .orderBy(asc(productsTable.sortOrder))
         .limit(8),
       db
         .select({ product: productsTable, categoryName: categoriesTable.name })
         .from(productsTable)
         .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
         .where(and(eq(productsTable.isBestSeller, true), or(eq(productsTable.isDeleted, false), isNull(productsTable.isDeleted))))
+        .orderBy(asc(productsTable.sortOrder))
         .limit(8),
     ]);
 

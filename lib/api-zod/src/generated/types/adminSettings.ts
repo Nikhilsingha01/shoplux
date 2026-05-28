@@ -30,4 +30,5 @@ export interface AdminSettings {
   trustBadge2?: string | null;
   /** @nullable */
   trustBadge3?: string | null;
+  isChatbotEnabled?: boolean;
 }

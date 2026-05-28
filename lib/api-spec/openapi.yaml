@@ -692,6 +692,51 @@ paths:
               schema:
                 $ref: "#/components/schemas/AdminSettings"
 
+  /admin/products/reorder:
+    post:
+      operationId: reorderProducts
+      tags: [admin]
+      summary: Reorder products (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReorderProductsInput"
+      responses:
+        "200":
+          description: Products reordered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /chatbot/chat:
+    post:
+      operationId: sendChatMessage
+      tags: [chatbot]
+      summary: Send a message to the AI Chatbot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendChatMessageInput"
+      responses:
+        "200":
+          description: Chatbot reply
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [reply]
+                properties:
+                  reply:
+                    type: string
+
   /admin/users:
     get:
       operationId: listUsers
@@ -1449,6 +1494,8 @@ components:
           type: ["string", "null"]
         trustBadge3:
           type: ["string", "null"]
+        isChatbotEnabled:
+          type: boolean
 
     AdminSettingsUpdate:
       type: object
@@ -1479,6 +1526,8 @@ components:
           type: string
         trustBadge3:
           type: string
+        isChatbotEnabled:
+          type: boolean
 
     AppUser:
       type: object
@@ -1513,3 +1562,27 @@ components:
           type: integer
         limit:
           type: integer
+
+    ReorderProductsInput:
+      type: object
+      required: [ids]
+      properties:
+        ids:
+          type: array
+          items:
+            type: integer
+
+    SendChatMessageInput:
+      type: object
+      required: [messages]
+      properties:
+        messages:
+          type: array
+          items:
+            type: object
+            required: [role, content]
+            properties:
+              role:
+                type: string
+              content:
+                type: string

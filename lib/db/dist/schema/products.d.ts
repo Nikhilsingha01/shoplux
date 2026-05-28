@@ -549,6 +549,23 @@ export declare const productsTable: import("drizzle-orm/pg-core").PgTableWithCol
             identity: undefined;
             generated: undefined;
         }, {}, {}>;
+        sortOrder: import("drizzle-orm/pg-core").PgColumn<{
+            name: "sort_order";
+            tableName: "products";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
         createdAt: import("drizzle-orm/pg-core").PgColumn<{
             name: "created_at";
             tableName: "products";
@@ -608,6 +625,7 @@ export declare const insertProductSchema: z.ZodObject<{
     isDeliveryChargeApplicable: z.ZodOptional<z.ZodNullable<z.ZodBoolean>>;
     isDeleted: z.ZodOptional<z.ZodBoolean>;
     flashSaleId: z.ZodOptional<z.ZodNullable<z.ZodInt>>;
+    sortOrder: z.ZodOptional<z.ZodInt>;
 }, {
     out: {};
     in: {};

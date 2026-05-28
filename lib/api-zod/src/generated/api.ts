@@ -969,7 +969,8 @@ export const GetAdminSettingsResponse = zod.object({
   "adminClerkUserId": zod.string().nullish(),
   "trustBadge1": zod.string().nullish(),
   "trustBadge2": zod.string().nullish(),
-  "trustBadge3": zod.string().nullish()
+  "trustBadge3": zod.string().nullish(),
+  "isChatbotEnabled": zod.boolean().optional()
 })
 
 
@@ -989,7 +990,8 @@ export const UpdateAdminSettingsBody = zod.object({
   "adminClerkUserId": zod.string().optional(),
   "trustBadge1": zod.string().optional(),
   "trustBadge2": zod.string().optional(),
-  "trustBadge3": zod.string().optional()
+  "trustBadge3": zod.string().optional(),
+  "isChatbotEnabled": zod.boolean().optional()
 })
 
 export const UpdateAdminSettingsResponse = zod.object({
@@ -1006,7 +1008,35 @@ export const UpdateAdminSettingsResponse = zod.object({
   "adminClerkUserId": zod.string().nullish(),
   "trustBadge1": zod.string().nullish(),
   "trustBadge2": zod.string().nullish(),
-  "trustBadge3": zod.string().nullish()
+  "trustBadge3": zod.string().nullish(),
+  "isChatbotEnabled": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Reorder products (admin only)
+ */
+export const ReorderProductsBody = zod.object({
+  "ids": zod.array(zod.number())
+})
+
+export const ReorderProductsResponse = zod.object({
+  "success": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Send a message to the AI Chatbot
+ */
+export const SendChatMessageBody = zod.object({
+  "messages": zod.array(zod.object({
+  "role": zod.string(),
+  "content": zod.string()
+}))
+})
+
+export const SendChatMessageResponse = zod.object({
+  "reply": zod.string()
 })
 
 

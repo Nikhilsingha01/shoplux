@@ -63,6 +63,7 @@ export const adminSettingsTable = pgTable("admin_settings", {
   trustBadge1: text("trust_badge_1").default("Free delivery on orders above ₹999"),
   trustBadge2: text("trust_badge_2").default("Secure & encrypted payments"),
   trustBadge3: text("trust_badge_3").default("7-day hassle-free returns"),
+  isChatbotEnabled: boolean("is_chatbot_enabled").notNull().default(false),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 

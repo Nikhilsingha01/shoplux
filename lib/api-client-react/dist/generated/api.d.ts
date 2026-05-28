@@ -1,5 +1,5 @@
 import type { QueryKey, UseMutationOptions, UseMutationResult, UseQueryOptions, UseQueryResult } from '@tanstack/react-query';
-import type { Address, AddressInput, AddressUpdate, AdminSettings, AdminSettingsUpdate, AdminStats, Banner, BannerInput, BannerUpdate, Category, CategoryInput, CategoryUpdate, Coupon, CouponInput, CouponUpdate, CouponValidateInput, HealthStatus, HomepageProducts, ListOrdersParams, ListProductsParams, ListUsersParams, Order, OrderInput, OrderListResponse, OrderStatusUpdate, PaymentOrder, PaymentOrderInput, PaymentVerification, PaymentVerificationResult, Product, ProductInput, ProductListResponse, ProductUpdate, UserListResponse, WishlistInput, WishlistItem } from './api.schemas';
+import type { Address, AddressInput, AddressUpdate, AdminSettings, AdminSettingsUpdate, AdminStats, Banner, BannerInput, BannerUpdate, Category, CategoryInput, CategoryUpdate, Coupon, CouponInput, CouponUpdate, CouponValidateInput, HealthStatus, HomepageProducts, ListOrdersParams, ListProductsParams, ListUsersParams, Order, OrderInput, OrderListResponse, OrderStatusUpdate, PaymentOrder, PaymentOrderInput, PaymentVerification, PaymentVerificationResult, Product, ProductInput, ProductListResponse, ProductUpdate, ReorderProducts200, ReorderProductsInput, SendChatMessage200, SendChatMessageInput, UserListResponse, WishlistInput, WishlistItem } from './api.schemas';
 import type { ErrorType, BodyType } from '../custom-fetch';
 type AwaitedInput<T> = PromiseLike<T> | T;
 type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
@@ -869,6 +869,56 @@ export declare const useUpdateAdminSettings: <TError = ErrorType<unknown>, TCont
     }, TContext>;
 }) => UseMutationResult<Awaited<ReturnType<typeof updateAdminSettings>>, TError, {
     data: BodyType<AdminSettingsUpdate>;
+}, TContext>;
+export declare const getReorderProductsUrl: () => string;
+/**
+ * @summary Reorder products (admin only)
+ */
+export declare const reorderProducts: (reorderProductsInput: ReorderProductsInput, options?: RequestInit) => Promise<ReorderProducts200>;
+export declare const getReorderProductsMutationOptions: <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+    mutation?: UseMutationOptions<Awaited<ReturnType<typeof reorderProducts>>, TError, {
+        data: BodyType<ReorderProductsInput>;
+    }, TContext>;
+}) => UseMutationOptions<Awaited<ReturnType<typeof reorderProducts>>, TError, {
+    data: BodyType<ReorderProductsInput>;
+}, TContext>;
+export type ReorderProductsMutationResult = NonNullable<Awaited<ReturnType<typeof reorderProducts>>>;
+export type ReorderProductsMutationBody = BodyType<ReorderProductsInput>;
+export type ReorderProductsMutationError = ErrorType<unknown>;
+/**
+* @summary Reorder products (admin only)
+*/
+export declare const useReorderProducts: <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+    mutation?: UseMutationOptions<Awaited<ReturnType<typeof reorderProducts>>, TError, {
+        data: BodyType<ReorderProductsInput>;
+    }, TContext>;
+}) => UseMutationResult<Awaited<ReturnType<typeof reorderProducts>>, TError, {
+    data: BodyType<ReorderProductsInput>;
+}, TContext>;
+export declare const getSendChatMessageUrl: () => string;
+/**
+ * @summary Send a message to the AI Chatbot
+ */
+export declare const sendChatMessage: (sendChatMessageInput: SendChatMessageInput, options?: RequestInit) => Promise<SendChatMessage200>;
+export declare const getSendChatMessageMutationOptions: <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+    mutation?: UseMutationOptions<Awaited<ReturnType<typeof sendChatMessage>>, TError, {
+        data: BodyType<SendChatMessageInput>;
+    }, TContext>;
+}) => UseMutationOptions<Awaited<ReturnType<typeof sendChatMessage>>, TError, {
+    data: BodyType<SendChatMessageInput>;
+}, TContext>;
+export type SendChatMessageMutationResult = NonNullable<Awaited<ReturnType<typeof sendChatMessage>>>;
+export type SendChatMessageMutationBody = BodyType<SendChatMessageInput>;
+export type SendChatMessageMutationError = ErrorType<unknown>;
+/**
+* @summary Send a message to the AI Chatbot
+*/
+export declare const useSendChatMessage: <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+    mutation?: UseMutationOptions<Awaited<ReturnType<typeof sendChatMessage>>, TError, {
+        data: BodyType<SendChatMessageInput>;
+    }, TContext>;
+}) => UseMutationResult<Awaited<ReturnType<typeof sendChatMessage>>, TError, {
+    data: BodyType<SendChatMessageInput>;
 }, TContext>;
 export declare const getListUsersUrl: (params?: ListUsersParams) => string;
 /**
