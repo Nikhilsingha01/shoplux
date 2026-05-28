@@ -1,10 +1,23 @@
 import { Router } from "express";
 import { getAuth } from "@clerk/express";
 import { db, adminSettingsTable, productsTable, ordersTable, categoriesTable } from "@workspace/db";
-import { eq, desc, and, or, isNull } from "drizzle-orm";
+import { eq, desc, and, or, isNull, sql } from "drizzle-orm";
 import { SendChatMessageBody } from "@workspace/api-zod";
 import axios from "axios";
 import { logger } from "../lib/logger";
+
+// Run programmatic migration to add chatbot configuration to settings if missing
+(async () => {
+  try {
+    console.log("Running programmatic database migration for admin_settings (is_chatbot_enabled)...");
+    await db.execute(sql`
+      ALTER TABLE admin_settings ADD COLUMN IF NOT EXISTS is_chatbot_enabled BOOLEAN NOT NULL DEFAULT TRUE;
+    `);
+    console.log("Database migration for admin_settings COMPLETED SUCCESSFULLY");
+  } catch (err: any) {
+    console.error("Database migration for admin_settings FAILED:", err);
+  }
+})();
 
 const router = Router();
 
