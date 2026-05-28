@@ -71,13 +71,10 @@ function FloatingSocialMenu({
 }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Clean phone number (strip spaces/dashes)
-  const cleanPhone = whatsappNumber ? whatsappNumber.replace(/\s+/g, "").replace(/[+]/g, "") : "";
-  const whatsappUrl = cleanPhone 
-    ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent("Hi, I need help with my order")}`
-    : null;
-
-  if (!whatsappUrl && !instagramUrl) return null;
+  // Clean phone number or use standard default
+  const cleanPhone = whatsappNumber ? whatsappNumber.replace(/\s+/g, "").replace(/[+]/g, "") : "919301103485";
+  const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent("Hi, I need help with my order")}`;
+  const finalInstagramUrl = instagramUrl || "https://www.instagram.com/shoplux.in?igsh=Yzh5MzZkMWV4ZHM0";
 
   return (
     <div className="fixed bottom-20 md:bottom-6 right-6 z-40 flex flex-col items-center gap-3">
@@ -90,36 +87,32 @@ function FloatingSocialMenu({
         }`}
       >
         {/* Instagram button */}
-        {instagramUrl && (
-          <a
-            href={instagramUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-11 h-11 md:w-12 md:h-12 bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#bc1888] text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 relative group"
-            aria-label="Follow us on Instagram"
-          >
-            <Instagram className="w-5 h-5 md:w-5.5 md:h-5.5" />
-            <span className="absolute right-14 bg-background text-foreground text-xs px-2.5 py-1 rounded-md border shadow-md font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-              Instagram
-            </span>
-          </a>
-        )}
+        <a
+          href={finalInstagramUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-11 h-11 md:w-12 md:h-12 bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#bc1888] text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 relative group"
+          aria-label="Follow us on Instagram"
+        >
+          <Instagram className="w-5 h-5 md:w-5.5 md:h-5.5" />
+          <span className="absolute right-14 bg-background text-foreground text-xs px-2.5 py-1 rounded-md border shadow-md font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+            Instagram
+          </span>
+        </a>
 
         {/* WhatsApp button */}
-        {whatsappUrl && (
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-11 h-11 md:w-12 md:h-12 bg-[#25D366] text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 relative group"
-            aria-label="Chat on WhatsApp"
-          >
-            <MessageCircle className="w-5 h-5 md:w-5.5 md:h-5.5" />
-            <span className="absolute right-14 bg-background text-foreground text-xs px-2.5 py-1 rounded-md border shadow-md font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-              WhatsApp Chat
-            </span>
-          </a>
-        )}
+        <a
+          href={whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-11 h-11 md:w-12 md:h-12 bg-[#25D366] text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 relative group"
+          aria-label="Chat on WhatsApp"
+        >
+          <MessageCircle className="w-5 h-5 md:w-5.5 md:h-5.5" />
+          <span className="absolute right-14 bg-background text-foreground text-xs px-2.5 py-1 rounded-md border shadow-md font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+            WhatsApp Chat
+          </span>
+        </a>
       </div>
 
       {/* Main trigger FAB button */}

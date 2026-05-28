@@ -76,9 +76,21 @@ export function Navbar() {
             {logoUrl ? (
               <img src={logoUrl} alt={storeName} className="h-8 max-w-[150px] object-contain" />
             ) : (
-              <span className="font-extrabold text-xl tracking-wider bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 bg-clip-text text-transparent select-none drop-shadow-sm font-sans">
-                {storeName}
-              </span>
+              <>
+                <img 
+                  src={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/logo.png`} 
+                  alt={storeName} 
+                  className="h-8 max-w-[150px] object-contain block" 
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = 'none';
+                    const sibling = (e.target as HTMLElement).nextElementSibling;
+                    if (sibling) (sibling as HTMLElement).classList.remove('hidden');
+                  }} 
+                />
+                <span className="font-extrabold text-xl tracking-wider bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 bg-clip-text text-transparent select-none drop-shadow-sm font-sans hidden">
+                  {storeName}
+                </span>
+              </>
             )}
           </Link>
           <nav className="hidden md:flex items-center gap-6 ml-8">
