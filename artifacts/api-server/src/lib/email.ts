@@ -369,7 +369,92 @@ async function sendEmail(
   html: string,
   context: string
 ): Promise<void> {
+  let redirectedTo: string | null = null;
+  let emailStatus = process.env.RESEND_API_KEY ? "triggered" : "skipped_missing_api_key";
+
+  if (!process.env.RESEND_API_KEY) {
+    logger.warn({ context }, "RESEND_API_KEY not set — skipping email");
+    writeDebugEmailLog(to, subject, html, context, null, "skipped_missing_api_key");
+    return;
+  }
+
+  let recipient = to;
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: FROM_ADDRESS,
+      to: recipient,
+      subject,
+      html,
+    });
+
+    if (error) {
+      // Catch Resend sandbox sending restrictions properly
+      const errorMsg = error.message?.toLowerCase() || "";
+      if (
+        errorMsg.includes("sandbox") ||
+        errorMsg.includes("verify") ||
+        errorMsg.includes("only send to") ||
+        (error as any).name === "restricted_api"
+      ) {
+        logger.warn(
+          { context, error, originalRecipient: to },
+          "Resend sandbox restriction detected. Falling back to test mode (delivered@resend.dev)..."
+        );
+        
+        redirectedTo = "delivered@resend.dev";
+        emailStatus = "sandbox_test_mode";
+
+        const testSubject = `[SANDBOX TEST] ${subject}`;
+        const testHtml = `
+          <div style="background:#fff3cd; border:1px solid #ffeeba; color:#856404; padding:12px; margin-bottom:20px; font-family:sans-serif; border-radius:4px; font-size:13px; line-height:1.5;">
+            <strong>Resend Sandbox Test Mode Notification</strong><br/>
+            This email was originally addressed to: <strong>${to}</strong>.<br/>
+            Verify your custom domain in Resend to send emails directly to customer addresses.
+          </div>
+          ${html}
+        `;
+
+        const retryResult = await resend.emails.send({
+          from: FROM_ADDRESS,
+          to: "delivered@resend.dev",
+          subject: testSubject,
+          html: testHtml,
+        });
+
+        if (retryResult.error) {
+          logger.error({ context, error: retryResult.error }, "Sandbox test email fallback failed");
+          emailStatus = "failed";
+        } else {
+          logger.info(
+            { context, emailId: retryResult.data?.id },
+            "Sandbox test email successfully delivered to delivered@resend.dev"
+          );
+        }
+      } else {
+        logger.error({ context, error }, "Email send failed");
+        emailStatus = "failed";
+      }
+    } else {
+      logger.info({ context, emailId: data?.id, to: recipient }, "Email sent");
+    }
+  } catch (err: any) {
+    logger.error({ context, err }, "Email send threw unexpectedly");
+    emailStatus = "failed";
+  }
+
   // Log generated email locally for real-time visibility in Admin Panel
+  writeDebugEmailLog(to, subject, html, context, redirectedTo, emailStatus);
+}
+
+function writeDebugEmailLog(
+  to: string,
+  subject: string,
+  html: string,
+  context: string,
+  redirectedTo: string | null,
+  status: string
+) {
   try {
     const debugEmailDir = path.resolve(process.cwd(), "uploads");
     if (!fs.existsSync(debugEmailDir)) {
@@ -390,38 +475,14 @@ async function sendEmail(
       subject,
       html,
       context,
-      redirectedTo: null,
-      status: process.env.RESEND_API_KEY ? "triggered" : "skipped_missing_api_key"
+      redirectedTo,
+      status
     });
     
     list = list.slice(0, 50);
     fs.writeFileSync(debugEmailPath, JSON.stringify(list, null, 2));
   } catch (e) {
     logger.error({ e }, "Failed to write local debug email log");
-  }
-
-  if (!process.env.RESEND_API_KEY) {
-    logger.warn({ context }, "RESEND_API_KEY not set — skipping email");
-    return;
-  }
-
-  let recipient = to;
-
-  try {
-    const { data, error } = await resend.emails.send({
-      from: FROM_ADDRESS,
-      to: recipient,
-      subject,
-      html,
-    });
-
-    if (error) {
-      logger.error({ context, error }, "Email send failed");
-    } else {
-      logger.info({ context, emailId: data?.id, to: recipient }, "Email sent");
-    }
-  } catch (err) {
-    logger.error({ context, err }, "Email send threw unexpectedly");
   }
 }
 
