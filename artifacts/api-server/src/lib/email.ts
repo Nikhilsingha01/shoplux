@@ -399,37 +399,80 @@ async function sendEmail(
       ) {
         logger.warn(
           { context, error, originalRecipient: to },
-          "Resend sandbox restriction detected. Falling back to test mode (delivered@resend.dev)..."
+          "Resend sandbox restriction detected. Trying dynamic support email fallback..."
         );
         
-        redirectedTo = "delivered@resend.dev";
-        emailStatus = "sandbox_test_mode";
+        let retrySuccess = false;
+        
+        // 1. Try sending to SUPPORT_EMAIL as the dynamic owner fallback first
+        if (SUPPORT_EMAIL && SUPPORT_EMAIL !== to && !SUPPORT_EMAIL.includes("shoplux.in")) {
+          try {
+            logger.info({ context, fallback: SUPPORT_EMAIL }, "Retrying sandbox send to dynamic support email...");
+            
+            const testSubject = `[SANDBOX REDIRECT] ${subject}`;
+            const testHtml = `
+              <div style="background:#fff3cd; border:1px solid #ffeeba; color:#856404; padding:12px; margin-bottom:20px; font-family:sans-serif; border-radius:4px; font-size:13px; line-height:1.5;">
+                <strong>Resend Sandbox Redirect Notification</strong><br/>
+                This email was originally addressed to customer: <strong>${to}</strong>.<br/>
+                It has been dynamically redirected to your verified support email in sandbox mode.<br/>
+                Verify your custom domain in Resend to send directly to customers.
+              </div>
+              ${html}
+            `;
 
-        const testSubject = `[SANDBOX TEST] ${subject}`;
-        const testHtml = `
-          <div style="background:#fff3cd; border:1px solid #ffeeba; color:#856404; padding:12px; margin-bottom:20px; font-family:sans-serif; border-radius:4px; font-size:13px; line-height:1.5;">
-            <strong>Resend Sandbox Test Mode Notification</strong><br/>
-            This email was originally addressed to: <strong>${to}</strong>.<br/>
-            Verify your custom domain in Resend to send emails directly to customer addresses.
-          </div>
-          ${html}
-        `;
+            const retryResult = await resend.emails.send({
+              from: FROM_ADDRESS,
+              to: SUPPORT_EMAIL,
+              subject: testSubject,
+              html: testHtml,
+            });
 
-        const retryResult = await resend.emails.send({
-          from: FROM_ADDRESS,
-          to: "delivered@resend.dev",
-          subject: testSubject,
-          html: testHtml,
-        });
+            if (!retryResult.error) {
+              logger.info({ context, emailId: retryResult.data?.id, to: SUPPORT_EMAIL }, "Sandbox redirect sent successfully to support email");
+              redirectedTo = SUPPORT_EMAIL;
+              emailStatus = "sandbox_redirected_to_support";
+              retrySuccess = true;
+            } else {
+              logger.warn({ context, error: retryResult.error }, "Sandbox redirect to support email failed");
+            }
+          } catch (retryErr) {
+            logger.error({ context, err: retryErr }, "Sandbox redirect to support email threw unexpectedly");
+          }
+        }
 
-        if (retryResult.error) {
-          logger.error({ context, error: retryResult.error }, "Sandbox test email fallback failed");
-          emailStatus = "failed";
-        } else {
-          logger.info(
-            { context, emailId: retryResult.data?.id },
-            "Sandbox test email successfully delivered to delivered@resend.dev"
-          );
+        // 2. If support fallback is not set or failed, use delivered@resend.dev as the absolute safe test mode fallback
+        if (!retrySuccess) {
+          logger.info({ context }, "Falling back to safe test mode (delivered@resend.dev)...");
+          
+          redirectedTo = "delivered@resend.dev";
+          emailStatus = "sandbox_test_mode";
+
+          const testSubject = `[SANDBOX TEST] ${subject}`;
+          const testHtml = `
+            <div style="background:#fff3cd; border:1px solid #ffeeba; color:#856404; padding:12px; margin-bottom:20px; font-family:sans-serif; border-radius:4px; font-size:13px; line-height:1.5;">
+              <strong>Resend Sandbox Test Mode Notification</strong><br/>
+              This email was originally addressed to: <strong>${to}</strong>.<br/>
+              Verify your custom domain in Resend to send emails directly to customer addresses.
+            </div>
+            ${html}
+          `;
+
+          const retryResult = await resend.emails.send({
+            from: FROM_ADDRESS,
+            to: "delivered@resend.dev",
+            subject: testSubject,
+            html: testHtml,
+          });
+
+          if (retryResult.error) {
+            logger.error({ context, error: retryResult.error }, "Sandbox test email fallback failed");
+            emailStatus = "failed";
+          } else {
+            logger.info(
+              { context, emailId: retryResult.data?.id },
+              "Sandbox test email successfully delivered to delivered@resend.dev"
+            );
+          }
         }
       } else {
         logger.error({ context, error }, "Email send failed");
