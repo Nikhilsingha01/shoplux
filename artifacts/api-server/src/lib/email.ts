@@ -390,7 +390,7 @@ async function sendEmail(
       subject,
       html,
       context,
-      redirectedTo: FROM_ADDRESS.includes("onboarding@resend.dev") ? (process.env.SUPPORT_EMAIL || "nikhilsinghal2023@gmail.com") : null,
+      redirectedTo: null,
       status: process.env.RESEND_API_KEY ? "triggered" : "skipped_missing_api_key"
     });
     
@@ -406,15 +406,6 @@ async function sendEmail(
   }
 
   let recipient = to;
-  // Redirect unverified sandbox emails to Nikhil Singhal's registered Resend developer account email
-  if (FROM_ADDRESS.includes("onboarding@resend.dev")) {
-    const devFallback = process.env.SUPPORT_EMAIL || "nikhilsinghal2023@gmail.com";
-    logger.info(
-      { originalRecipient: to, devFallback, context },
-      "Resend onboarding sandbox mode detected — redirecting recipient to verified dev email"
-    );
-    recipient = devFallback;
-  }
 
   try {
     const { data, error } = await resend.emails.send({

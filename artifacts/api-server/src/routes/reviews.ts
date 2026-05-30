@@ -203,4 +203,75 @@ router.get("/admin/reviews", requireAdmin, async (_req, res): Promise<void> => {
   }
 });
 
+// POST /admin/reviews (Create manual/fake review - Requires Admin)
+router.post("/admin/reviews", requireAdmin, async (req, res): Promise<void> => {
+  const { productId, customerName, rating, reviewText, createdAt } = req.body;
+
+  const prodId = parseInt(productId, 10);
+  if (isNaN(prodId)) {
+    res.status(400).json({ error: "Invalid product ID" });
+    return;
+  }
+
+  if (!customerName || !customerName.trim()) {
+    res.status(400).json({ error: "Customer name is required" });
+    return;
+  }
+
+  const rat = parseInt(rating, 10);
+  if (isNaN(rat) || rat < 1 || rat > 5) {
+    res.status(400).json({ error: "Rating must be between 1 and 5" });
+    return;
+  }
+
+  if (!reviewText || !reviewText.trim()) {
+    res.status(400).json({ error: "Review text is required" });
+    return;
+  }
+
+  try {
+    const [product] = await db.select().from(productsTable).where(eq(productsTable.id, prodId)).limit(1);
+    if (!product) {
+      res.status(404).json({ error: "Product not found" });
+      return;
+    }
+
+    const reviewDate = createdAt ? new Date(createdAt) : new Date();
+
+    const [review] = await db
+      .insert(reviewsTable)
+      .values({
+        productId: prodId,
+        userId: "admin_fake",
+        customerName: customerName.trim(),
+        rating: rat,
+        reviewText: reviewText.trim(),
+        createdAt: reviewDate,
+      })
+      .returning();
+
+    // Recalculate average rating and count
+    const allReviews = await db
+      .select()
+      .from(reviewsTable)
+      .where(eq(reviewsTable.productId, prodId));
+
+    const count = allReviews.length;
+    const avg = count > 0 ? allReviews.reduce((sum, r) => sum + r.rating, 0) / count : 0;
+
+    await db
+      .update(productsTable)
+      .set({
+        rating: String(avg.toFixed(2)),
+        reviewCount: count,
+      })
+      .where(eq(productsTable.id, prodId));
+
+    res.status(201).json(review);
+  } catch (err: any) {
+    logger.error({ err }, "Failed to create fake review");
+    res.status(500).json({ error: err.message || "Failed to create review" });
+  }
+});
+
 export default router;
